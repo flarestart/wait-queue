@@ -67,7 +67,7 @@ class WaitQueue extends EventEmitter{
 		})
 		.then((item)=>{
 			if(this.terminated){
-				throw new TerminateError('AwaitQueue Terminate')
+				throw new TerminateError('WaitQueue Terminate')
 			}
 			return item
 		})
@@ -84,7 +84,7 @@ class WaitQueue extends EventEmitter{
 		})
 		.then((item)=>{
 			if(this.terminated){
-				throw new TerminateError('AwaitQueue Terminate')
+				throw new TerminateError('WaitQueue Terminate')
 			}
 			return item
 		})
