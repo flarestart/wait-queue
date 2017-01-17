@@ -7,7 +7,26 @@
 ```
 $ npm install wait-queue
 ```
-## Examples
+## Simple Example
+
+```js
+'use strict'
+const WaitQueue = require('wait-queue')
+const wq = new WaitQueue
+
+// there's no task here 
+wq.shift()
+.then((item)=>{
+    console.log('receive', item)
+})
+
+// task will add after 1s
+setTimeout(function(){
+    wq.push('any object')
+}, 1000)
+```
+
+## Example(More Complex)
 
 ```js
 'use strict'
@@ -66,7 +85,7 @@ setTimeout(function(){
 const co = require('co')
 const wq = new WaitQueue
 
-// do 
+// do loop until catch a TerminateError, use e.isTerminateQueue to check
 co(function *(){
     while(true){
         let item = yield wq.shift()
