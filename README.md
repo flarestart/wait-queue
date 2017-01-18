@@ -1,5 +1,8 @@
 # wait-queue
 
+[![NPM version][npm-image]][npm-url]
+[![Downloads][downloads-image]][downloads-url]
+
   A javascript wait queue object handle infinity loop tasks more efficiently (using ES6 class and promise)
 
 ## Installation
@@ -7,6 +10,11 @@
 ```
 $ npm install wait-queue
 ```
+
+## ES5 version
+
+[ES5 version](https://github.com/flarestart/wait-queue-es5)
+
 ## Simple Example
 
 ```js
@@ -190,4 +198,7 @@ wq.on('terminate', function(){
 
   MIT
 
-[npm-url]: https://npmjs.org/package/co
+[npm-image]: https://img.shields.io/npm/v/wait-queue.svg
+[npm-url]: https://npmjs.org/package/wait-queue
+[downloads-image]: http://img.shields.io/npm/dm/wait-queue.svg
+[downloads-url]: https://npmjs.org/package/wait-queue
