@@ -28,8 +28,8 @@ class WaitQueue extends EventEmitter{
 		}else{
 			if(this.queue.length > 0 && this.listeners.length > 0){
 				let listener = this.listeners.shift()
-				// delay listener
 				listener.call(this)
+				// delay next loop
 				setImmediate(this._flush.bind(this))
 			}
 		}
