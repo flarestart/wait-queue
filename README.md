@@ -15,6 +15,37 @@ $ npm install wait-queue
 
 [ES5 version](https://github.com/flarestart/wait-queue-es5)
 
+## Benchmark
+
+```
+$ npm install
+$ npm run benchmark
+```
+
+Sample data in Macbook Pro MF839/8GB
+
+### 1.0.3(Use LinkList)
+
+    .push() 1k data speed test x 511,367 ops/sec ±31.07% (27 runs sampled)
+    .unshift() 1k data speed test x 269,995 ops/sec ±39.60% (14 runs sampled)
+    .push() 4k data speed test x 41,531 ops/sec ±12.20% (7 runs sampled)
+    .unshift() 4k data speed test x 35,928 ops/sec ±5.11% (8 runs sampled)
+    .shift() 69614.33093950555 /s
+
+### 1.0.2(Use Array)
+
+    .push() 1k data speed test x 554,552 ops/sec ±26.09% (25 runs sampled)
+    .unshift() 1k data speed test x 132 ops/sec ±2.96% (72 runs sampled)
+    .push() 4k data speed test x 75,107 ops/sec ±22.32% (9 runs sampled)
+    .unshift() 4k data speed test x 115 ops/sec ±2.15% (71 runs sampled)
+    .shift() `wait too long, I didn't wait for the result, I guess is about 110/s`
+
+## Change log
+
+### 1.0.3
+
+ * Replace `wq.queue` from `Array` to `LinkList`, because do shift() operation on `Array` of 10,000,000 items cost too many time
+
 ## Simple Example
 
 ```js

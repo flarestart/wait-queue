@@ -4,6 +4,7 @@
  */
 'use strict'
 const EventEmitter = require('events').EventEmitter
+const LinkList = require('./libs/LinkList')
 
 class TerminateError extends Error{
 	constructor(message){
@@ -15,7 +16,7 @@ class TerminateError extends Error{
 class WaitQueue extends EventEmitter{
 	constructor(){
 		super()
-		this.queue = []
+		this.queue = new LinkList
 		this.listeners = []
 		this.terminated = false
 	}
@@ -35,7 +36,7 @@ class WaitQueue extends EventEmitter{
 		}
 	}
 	empty(){
-		this.queue = []
+		this.queue = new LinkList
 	}
 	unshift(item){
 		let success = false
@@ -91,7 +92,7 @@ class WaitQueue extends EventEmitter{
 	}
 	terminate(){
 		this.terminated = true
-		this.queue = []
+		this.queue = new LinkList
 		this._flush()
 		this.emit('terminate')
 	}
