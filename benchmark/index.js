@@ -1,54 +1,123 @@
-var Benchmark = require('benchmark');
-var suite = new Benchmark.Suite;
+'use strict'
+var Benchmark = require('benchmark')
+var suite = new Benchmark.Suite
 var WaitQueue = require('../index')
-var wq = new WaitQueue
+var LinkList = require('../libs/LinkList')
+var Buffer = require('buffer').Buffer
 
-var TimeStart = Date.now()
-var End = new Error('end')
-var Count = 0
-
-// add a default consumer
-function loop(){
-    wq.shift()
-    .then(function(item){
-        // end loop, output shift speed
-        if(item === End){
-            console.log('.shift()', Count * 1000 / (Date.now() - TimeStart), '/s');
-        }
-        setImmediate(loop)
-    })
-    .catch(function(e){
-        console.log(e)
-    })
+var newBuffer
+if(typeof Buffer.allocUnsafe === 'function'){
+    newBuffer = function(size){return Buffer.allocUnsafe(size)}
+}else{
+    newBuffer = function(size){return new Buffer(size)}
 }
-// start loop
-loop()
 
-// test push speed
-suite.add('.push() 1k data speed test', function () {
-    Count++
-    wq.push(Buffer.allocUnsafe(1024))
+var wq = new WaitQueue
+var array = []
+suite.add('Array.push(1k data) speed test', function () {
+    array.push(newBuffer(1024))
 })
-suite.add('.unshift() 1k data speed test', function () {
-    Count++
-    wq.unshift(Buffer.allocUnsafe(1024))
+suite.add('Array.push(1k data) 1000000 times then Array.shift() speed test', function() {
+    array.shift()
+}, {
+    onStart: function(){
+        for(let n=0; n<1000000; n++){
+            array.push(newBuffer(1024))
+        }
+    },
+    onCycle: function(){
+        array.push(newBuffer(1024))
+    }
 })
-suite.add('.push() 4k data speed test', function () {
-    Count++
-    wq.push(Buffer.allocUnsafe(4096))
+suite.add('WaitQueue.push(1k data) speed test', function () {
+    wq.push(newBuffer(1024))
 })
-suite.add('.unshift() 4k data speed test', function () {
-    Count++
-    wq.unshift(Buffer.allocUnsafe(4096))
+suite.add('WaitQueue.unshift(1k data) speed test', function () {
+    wq.unshift(newBuffer(1024))
+})
+suite.add('WaitQueue.shift() speed test', function() {
+    wq.shift()
+})
+suite.add('WaitQueue.pop() speed test', function() {
+    wq.pop()
+})
+suite.add('WaitQueue.push(1k data) 1000000 times then WaitQueue.shift() speed test', function() {
+    wq.shift()
+}, {
+    onStart: function(){
+        for(let n=0; n<1000000; n++){
+            wq.push(newBuffer(1024))
+        }
+    },
+    onCycle: function(){
+        wq.push(newBuffer(1024))
+    }
+})
+suite.add('WaitQueue.push(1k data) 1000000 times then WaitQueue.pop() speed test', function() {
+    wq.pop()
+}, {
+    onStart: function(){
+        for(let n=0; n<1000000; n++){
+            wq.push(newBuffer(1024))
+        }
+    },
+    onCycle: function(){
+        wq.unshift(newBuffer(1024))
+    }
+})
+suite.add('Array.push(4k data) speed test', function () {
+    array.push(newBuffer(4096))
+})
+suite.add('Array.push(4k data) 1000000 times then Array.shift() speed test', function() {
+    array.shift()
+}, {
+    onStart: function(){
+        for(let n=0; n<1000000; n++){
+            array.push(newBuffer(4096))
+        }
+    },
+    onCycle: function(){
+        array.push(newBuffer(4096))
+    }
+})
+suite.add('WaitQueue.push(4k data) speed test', function () {
+    wq.push(newBuffer(4096))
+})
+suite.add('WaitQueue.unshift(4k data) speed test', function () {
+    wq.unshift(newBuffer(4096))
+})
+suite.add('WaitQueue.push(4k data) 1000000 times then WaitQueue.shift() speed test', function() {
+    wq.shift()
+}, {
+    onStart: function(){
+        for(let n=0; n<1000000; n++){
+            wq.push(newBuffer(1024))
+        }
+    },
+    onCycle: function(){
+        wq.push(newBuffer(4096))
+    }
+})
+suite.add('WaitQueue.push(4k data) 1000000 times then WaitQueue.pop() speed test', function() {
+    wq.pop()
+}, {
+    onStart: function(){
+        for(let n=0; n<1000000; n++){
+            wq.push(newBuffer(1024))
+        }
+    },
+    onCycle: function(){
+        wq.unshift(newBuffer(4096))
+    }
 })
 
-suite.on('cycle', function(event) {
+suite.on('cycle', function (event) {
     console.log(String(event.target));
+    array = []
+    wq.empty()
+    wq.listeners = new LinkList
 })
-.on('error', function(err){
-    console.log(err)
+.on('error', function (err) {
+    console.error(err)
 })
-.on('complete', function() {
-    wq.push(End)
-})
-.run({ async: true })
+.run({ queued: true })

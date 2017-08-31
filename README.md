@@ -5,64 +5,109 @@
 
   A javascript wait queue object handle infinity loop tasks more efficiently (using ES6 class and promise)
 
-## Installation
+  WaitQueue is an async implements of Array
 
-```
+## How to use
+
+```shell
 $ npm install wait-queue
 ```
 
-## ES5 version
+```js
+// Normal Array
+var array = []
+console.log(array.shift())
+// undefined
+array.push('foo')
+console.log(array.shift())
+// "foo"
 
-[ES5 version](https://github.com/flarestart/wait-queue-es5)
+// WaitQueue
+const WaitQueue = require('wait-queue')
+const wq = new WaitQueue
+wq.shift().then(function(item){
+    // will wait until got value
+    console.log(item)
+    // "foo"
+})
 
-## Benchmark
-
+setTimeout(function(){
+    wq.push('foo')
+}, 1000)
 ```
-$ npm install
-$ npm run benchmark
-```
 
-Sample data in Macbook Pro MF839/8GB
+## Requirements
 
-### 1.0.3(Use LinkList)
+NodeJS >= 4.0.0 or use [ES5 version](https://github.com/flarestart/wait-queue-es5)
 
-    .push() 1k data speed test x 511,367 ops/sec ±31.07% (27 runs sampled)
-    .unshift() 1k data speed test x 269,995 ops/sec ±39.60% (14 runs sampled)
-    .push() 4k data speed test x 41,531 ops/sec ±12.20% (7 runs sampled)
-    .unshift() 4k data speed test x 35,928 ops/sec ±5.11% (8 runs sampled)
-    .shift() 69614.33093950555 /s
-
-### 1.0.2(Use Array)
-
-    .push() 1k data speed test x 554,552 ops/sec ±26.09% (25 runs sampled)
-    .unshift() 1k data speed test x 132 ops/sec ±2.96% (72 runs sampled)
-    .push() 4k data speed test x 75,107 ops/sec ±22.32% (9 runs sampled)
-    .unshift() 4k data speed test x 115 ops/sec ±2.15% (71 runs sampled)
-    .shift() `wait too long, I didn't wait for the result, I guess is about 110/s`
 
 ## Change log
 
+### 1.1.0
+ * Improve benchmark code and add test code  
+ * Remove `TerminateError` and `.terminate()` method
+ * Add ES6 `Iterator` to WaitQueue. use `for(... of wq){...}`
+ * .push(), .unshift() can receive multi values `.push(1,2,3)`
+
 ### 1.0.3
 
- * Replace `wq.queue` from `Array` to `LinkList`, because do shift() operation on `Array` of 10,000,000 items cost too many time
+ * Replace `wq.queue` from `Array` to `LinkList`, because do shift() operation on `Array` of 10,000,000 items cost too much time
 
-## Simple Example
+## Properties
+
+### wq.length
+
+Length of the WaitQueue(readonly)
+
+### wq.queue
+
+A LinkList, used to store the queue items, Do not modify it directly
+
+### wq.listeners
+
+If no elements in queue yet, listener will add here, Don't modify it
+
+## Methods
+
+### wq.push(item1, [item2])
+
+Add items to the end of the queue, will return length of the queue
+
+### wq.shift().then( item => )
+
+Got an item from front of the queue, this is a Promise method, if there's no item
+in the queue, it will wait
+
+### wq.unshift(item)
+
+Put an item in front of the queue, will return length of the queue
+
+### wq.pop().then( item => )
+
+Got an item at the end of the queue, this is a Promise method, if there's no item
+in the queue, it will wait
+
+### wq.empty() alias of wq.clearQueue()
+
+Clear the queue, Won't clear listeners
+
+### wq.clearListeners()
+
+Clear waited listeners of the queue
+
+## use for ... of to get all values
 
 ```js
 'use strict'
 const WaitQueue = require('wait-queue')
 const wq = new WaitQueue
 
-// there's no task here 
-wq.shift()
-.then((item)=>{
-    console.log('receive', item)
-})
+wq.push(1,2,3,4,5)
 
-// task will add after 1s
-setTimeout(function(){
-    wq.push('any object')
-}, 1000)
+console.log('length', wq.length)
+for(var n of wq){
+    console.log(n)
+}
 ```
 
 ## Example: Multi Worker
@@ -125,7 +170,6 @@ wq.push(function(){
 const WaitQueue = require('wait-queue')
 const wq = new WaitQueue
 
-// do loop until catch a TerminateError, use e.isTerminateQueue to check
 function loop(){
     // put first element out of queue
     wq.shift()
@@ -136,15 +180,8 @@ function loop(){
         setImmediate(loop)
     })
     .catch(function(e){
-        // check if is a TerminateError
-        if(e.isTerminateQueue){
-            // should not do loop, because wait-queue is terminate somewhere
-            console.log('end loop', e)
-        }else{
-            // error throw by other Promise object
-            // you can record errors and do next loop
-            setImmediate(loop)
-        }
+        console.error('error', e)
+        setImmediate(loop)
     })
 }
 setImmediate(loop)
@@ -157,27 +194,16 @@ interval = setInterval(function(){
         taskid: taskID++
     })
 }, 1000)
-
-// will trigger this event while wq.terminate() is called
-wq.on('terminate', function(){
-    clearInterval(interval)
-})
-
-// terminate after 10s
-setTimeout(function(){
-    wq.terminate()
-}, 10*1000)
-
-
 ```
 
 ## Using with co
 
 ```js
+'use strict'
+const WaitQueue = require('wait-queue')
 const co = require('co')
 const wq = new WaitQueue
 
-// do loop until catch a TerminateError, use e.isTerminateQueue to check
 co(function *(){
     while(true){
         let item = yield wq.shift()
@@ -215,68 +241,51 @@ setInterval(function(){
     })
 }, 1000)
 
-// terminate after 10s
-// setTimeout(function(){
-//    wq.terminate()
-// }, 10*1000)
 ```
 
-## Methods
+## Benchmark
 
-### wq.push(item)
-
-Add an item to the end of the queue, will return true if item added to the queue,
-if wait-queue is terminated, it will return false
-
-### wq.shift().then( item => )
-
-Got an item from front of the queue, this is a Promise method, if there's no item
-in the queue, it will wait
-
-### wq.unshift(item)
-
-Put an item in front of the queue, will return true if item added to the queue,
-if wait-queue is terminated, it will return false
-
-### wq.pop().then( item => )
-
-Got an item at the end of the queue, this is a Promise method, if there's no item
-in the queue, it will wait
-
-### wq.terminate()
-
-Teminate the queue, and if there's any `shift()` or `pop()` waited, every method
-will receive a TerminateError, you can use e.isTerminateQueue to check
-
-### wq.empty()
-
-Clear the queue that haven't assign
-
-## Properties
-
-### wq.queue
-
-A plain javascript array, used to store the queue items
-
-### wq.listeners
-
-If no elements in queue yet, listener will add here, Don't modify it
-
-### wq.terminated
-
-Always be false, until `terminate()` is called
-
-## Events
-
-### terminate
-
-This event will trigger after wq.terminate() is called
-
-```js
-wq.on('terminate', function(){
-    console.log('terminated')
-})
 ```
+$ git clone https://github.com/flarestart/wait-queue.git
+$ cd wait-queue
+$ npm install
+$ npm run benchmark
+```
+
+Sample data in Macbook Pro MF839/8GB
+
+### 1.1.0(Improve benchmark code)
+
+    Array.push(1k data) speed test x 629,538 ops/sec ±22.90% (26 runs sampled)
+    Array.push(1k data) 1000000 times then Array.shift() speed test x 492 ops/sec ±1.02% (89 runs sampled)
+    WaitQueue.push(1k data) speed test x 501,581 ops/sec ±23.45% (14 runs sampled)
+    WaitQueue.unshift(1k data) speed test x 447,272 ops/sec ±24.80% (14 runs sampled)
+    WaitQueue.shift() speed test x 315,356 ops/sec ±14.30% (52 runs sampled)
+    WaitQueue.pop() speed test x 240,568 ops/sec ±51.35% (39 runs sampled)
+    WaitQueue.push(1k data) 1000000 times then WaitQueue.shift() speed test x 476,918 ops/sec ±26.68% (29 runs sampled)
+    WaitQueue.push(1k data) 1000000 times then WaitQueue.pop() speed test x 471,668 ops/sec ±25.08% (31 runs sampled)
+    Array.push(4k data) speed test x 119,981 ops/sec ±61.52% (14 runs sampled)
+    Array.push(4k data) 1000000 times then Array.shift() speed test x 479 ops/sec ±1.41% (86 runs sampled)
+    WaitQueue.push(4k data) speed test x 147,153 ops/sec ±46.03% (14 runs sampled)
+    WaitQueue.unshift(4k data) speed test x 157,694 ops/sec ±37.29% (16 runs sampled)
+    WaitQueue.push(4k data) 1000000 times then WaitQueue.shift() speed test x 447,783 ops/sec ±28.01% (31 runs sampled)
+    WaitQueue.push(4k data) 1000000 times then WaitQueue.pop() speed test x 409,826 ops/sec ±30.73% (28 runs sampled)
+
+### 1.0.3(Use LinkList)
+
+    .push() 1k data speed test x 511,367 ops/sec ±31.07% (27 runs sampled)
+    .unshift() 1k data speed test x 269,995 ops/sec ±39.60% (14 runs sampled)
+    .push() 4k data speed test x 41,531 ops/sec ±12.20% (7 runs sampled)
+    .unshift() 4k data speed test x 35,928 ops/sec ±5.11% (8 runs sampled)
+    .shift() 69614.33093950555 /s
+
+### 1.0.2(Use Array)
+
+    .push() 1k data speed test x 554,552 ops/sec ±26.09% (25 runs sampled)
+    .unshift() 1k data speed test x 132 ops/sec ±2.96% (72 runs sampled)
+    .push() 4k data speed test x 75,107 ops/sec ±22.32% (9 runs sampled)
+    .unshift() 4k data speed test x 115 ops/sec ±2.15% (71 runs sampled)
+    .shift() `wait too long, I didn't wait for the result, I guess is about 110/s`
 
 ## License
 
