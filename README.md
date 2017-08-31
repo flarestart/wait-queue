@@ -7,6 +7,23 @@
 
   WaitQueue is an async implements of Array
 
+## Table of Contents
+
+- [How to use](#how-to-use)
+- [Requirements](#requirements)
+- [Change Log](#change-log)
+- [Properties](#properties)
+- [Methods](#methods)
+- [Benchmark](#benchmark)
+
+Examples
+
+- [Iterator](#iterator)
+- [Multi Worker](#example-multi-worker)
+- [Push a function](#example-push-a-function)
+- [Loop Tasks](#example-loop-tasks)
+- [Using with co](#using-with-co)
+
 ## How to use
 
 ```shell
@@ -95,7 +112,55 @@ Clear the queue, Won't clear listeners
 
 Clear waited listeners of the queue
 
-## use for ... of to get all values
+
+## Benchmark
+
+```
+$ git clone https://github.com/flarestart/wait-queue.git
+$ cd wait-queue
+$ npm install
+$ npm run benchmark
+```
+
+Sample data in Macbook Pro MF839/8GB
+
+### 1.1.0(Improve benchmark code)
+
+    Array.push(1k data) speed test x 629,538 ops/sec ±22.90% (26 runs sampled)
+    Array.push(1k data) 1000000 times then Array.shift() speed test x 492 ops/sec ±1.02% (89 runs sampled)
+    WaitQueue.push(1k data) speed test x 501,581 ops/sec ±23.45% (14 runs sampled)
+    WaitQueue.unshift(1k data) speed test x 447,272 ops/sec ±24.80% (14 runs sampled)
+    WaitQueue.shift() speed test x 315,356 ops/sec ±14.30% (52 runs sampled)
+    WaitQueue.pop() speed test x 240,568 ops/sec ±51.35% (39 runs sampled)
+    WaitQueue.push(1k data) 1000000 times then WaitQueue.shift() speed test x 476,918 ops/sec ±26.68% (29 runs sampled)
+    WaitQueue.push(1k data) 1000000 times then WaitQueue.pop() speed test x 471,668 ops/sec ±25.08% (31 runs sampled)
+    Array.push(4k data) speed test x 119,981 ops/sec ±61.52% (14 runs sampled)
+    Array.push(4k data) 1000000 times then Array.shift() speed test x 479 ops/sec ±1.41% (86 runs sampled)
+    WaitQueue.push(4k data) speed test x 147,153 ops/sec ±46.03% (14 runs sampled)
+    WaitQueue.unshift(4k data) speed test x 157,694 ops/sec ±37.29% (16 runs sampled)
+    WaitQueue.push(4k data) 1000000 times then WaitQueue.shift() speed test x 447,783 ops/sec ±28.01% (31 runs sampled)
+    WaitQueue.push(4k data) 1000000 times then WaitQueue.pop() speed test x 409,826 ops/sec ±30.73% (28 runs sampled)
+
+### 1.0.3(Use LinkList)
+
+    .push() 1k data speed test x 511,367 ops/sec ±31.07% (27 runs sampled)
+    .unshift() 1k data speed test x 269,995 ops/sec ±39.60% (14 runs sampled)
+    .push() 4k data speed test x 41,531 ops/sec ±12.20% (7 runs sampled)
+    .unshift() 4k data speed test x 35,928 ops/sec ±5.11% (8 runs sampled)
+    .shift() 69614.33093950555 /s
+
+### 1.0.2(Use Array)
+
+    .push() 1k data speed test x 554,552 ops/sec ±26.09% (25 runs sampled)
+    .unshift() 1k data speed test x 132 ops/sec ±2.96% (72 runs sampled)
+    .push() 4k data speed test x 75,107 ops/sec ±22.32% (9 runs sampled)
+    .unshift() 4k data speed test x 115 ops/sec ±2.15% (71 runs sampled)
+    .shift() `wait too long, I didn't wait for the result, I guess is about 110/s`
+
+
+## Example: Iterator
+
+use for ... of to get all values
 
 ```js
 'use strict'
@@ -242,50 +307,6 @@ setInterval(function(){
 }, 1000)
 
 ```
-
-## Benchmark
-
-```
-$ git clone https://github.com/flarestart/wait-queue.git
-$ cd wait-queue
-$ npm install
-$ npm run benchmark
-```
-
-Sample data in Macbook Pro MF839/8GB
-
-### 1.1.0(Improve benchmark code)
-
-    Array.push(1k data) speed test x 629,538 ops/sec ±22.90% (26 runs sampled)
-    Array.push(1k data) 1000000 times then Array.shift() speed test x 492 ops/sec ±1.02% (89 runs sampled)
-    WaitQueue.push(1k data) speed test x 501,581 ops/sec ±23.45% (14 runs sampled)
-    WaitQueue.unshift(1k data) speed test x 447,272 ops/sec ±24.80% (14 runs sampled)
-    WaitQueue.shift() speed test x 315,356 ops/sec ±14.30% (52 runs sampled)
-    WaitQueue.pop() speed test x 240,568 ops/sec ±51.35% (39 runs sampled)
-    WaitQueue.push(1k data) 1000000 times then WaitQueue.shift() speed test x 476,918 ops/sec ±26.68% (29 runs sampled)
-    WaitQueue.push(1k data) 1000000 times then WaitQueue.pop() speed test x 471,668 ops/sec ±25.08% (31 runs sampled)
-    Array.push(4k data) speed test x 119,981 ops/sec ±61.52% (14 runs sampled)
-    Array.push(4k data) 1000000 times then Array.shift() speed test x 479 ops/sec ±1.41% (86 runs sampled)
-    WaitQueue.push(4k data) speed test x 147,153 ops/sec ±46.03% (14 runs sampled)
-    WaitQueue.unshift(4k data) speed test x 157,694 ops/sec ±37.29% (16 runs sampled)
-    WaitQueue.push(4k data) 1000000 times then WaitQueue.shift() speed test x 447,783 ops/sec ±28.01% (31 runs sampled)
-    WaitQueue.push(4k data) 1000000 times then WaitQueue.pop() speed test x 409,826 ops/sec ±30.73% (28 runs sampled)
-
-### 1.0.3(Use LinkList)
-
-    .push() 1k data speed test x 511,367 ops/sec ±31.07% (27 runs sampled)
-    .unshift() 1k data speed test x 269,995 ops/sec ±39.60% (14 runs sampled)
-    .push() 4k data speed test x 41,531 ops/sec ±12.20% (7 runs sampled)
-    .unshift() 4k data speed test x 35,928 ops/sec ±5.11% (8 runs sampled)
-    .shift() 69614.33093950555 /s
-
-### 1.0.2(Use Array)
-
-    .push() 1k data speed test x 554,552 ops/sec ±26.09% (25 runs sampled)
-    .unshift() 1k data speed test x 132 ops/sec ±2.96% (72 runs sampled)
-    .push() 4k data speed test x 75,107 ops/sec ±22.32% (9 runs sampled)
-    .unshift() 4k data speed test x 115 ops/sec ±2.15% (71 runs sampled)
-    .shift() `wait too long, I didn't wait for the result, I guess is about 110/s`
 
 ## License
 
