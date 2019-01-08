@@ -3,9 +3,9 @@
 [![NPM version][npm-image]][npm-url]
 [![Downloads][downloads-image]][downloads-url]
 
-  A javascript wait queue object handle infinity loop tasks more efficiently (using ES6 class and promise)
+A javascript wait queue object handle infinity loop tasks more efficiently
 
-  WaitQueue is an async implements of Array
+WaitQueue is an async implements of Array
 
 ## Table of Contents
 
@@ -30,45 +30,61 @@ Examples
 $ npm install wait-queue
 ```
 
+### await / async
+
 ```js
-// Normal Array
-var array = []
-console.log(array.shift())
-// undefined
-array.push('foo')
-console.log(array.shift())
-// "foo"
+const WaitQueue = require('wait-queue');
+const wq = new WaitQueue();
 
-// WaitQueue
-const WaitQueue = require('wait-queue')
-const wq = new WaitQueue
-wq.shift().then(function(item){
-    // will wait until got value
-    console.log(item)
-    // "foo"
-})
+async function run() {
+  const item = await wq.shift();
+  console.log(item);
+}
 
-setTimeout(function(){
-    wq.push('foo')
-}, 1000)
+setTimeout(() => {
+  wq.push('foo');
+}, 1000);
+
+run();
+```
+
+```js
+const WaitQueue = require('wait-queue');
+const wq = new WaitQueue();
+wq.shift().then(function(item) {
+  // will wait until got value
+  console.log(item);
+  // "foo"
+});
+
+setTimeout(function() {
+  wq.push('foo');
+}, 1000);
 ```
 
 ## Requirements
 
-NodeJS >= 4.0.0 or use [ES5 version](https://github.com/flarestart/wait-queue-es5)
+**Build**: Node.js >= 6.0.0
 
+**Run**: Node.js >= 4.0.0
 
 ## Change log
 
+### 1.1.1
+
+* Rewrite with TypeScript
+* Add Travis CI support
+
 ### 1.1.0
- * Improve benchmark code and add test code  
- * Remove `TerminateError` and `.terminate()` method
- * Add ES6 `Iterator` to WaitQueue. use `for(... of wq){...}`
- * .push(), .unshift() can receive multi values `.push(1,2,3)`
+
+- Improve benchmark code and add test code
+- Remove `TerminateError` and `.terminate()` method
+- Add ES6 `Iterator` to WaitQueue. use `for(... of wq){...}`
+- .push(), .unshift() can receive multi values `.push(1,2,3)`
 
 ### 1.0.3
 
- * Replace `wq.queue` from `Array` to `LinkList`, because do shift() operation on `Array` of 10,000,000 items cost too much time
+- Replace `wq.queue` from `Array` to `LinkedList`, because do shift() operation on `Array` of 10,000,000 items cost too much time
 
 ## Properties
 
@@ -78,7 +94,7 @@ Length of the WaitQueue(readonly)
 
 ### wq.queue
 
-A LinkList, used to store the queue items, Do not modify it directly
+A LinkedList, used to store the queue items, Do not modify it directly
 
 ### wq.listeners
 
@@ -112,7 +128,6 @@ Clear the queue, Won't clear listeners
 
 Clear waited listeners of the queue
 
-
 ## Benchmark
 
 ```
@@ -141,7 +156,7 @@ Sample data in Macbook Pro MF839/8GB
     WaitQueue.push(4k data) 1000000 times then WaitQueue.shift() speed test x 447,783 ops/sec ±28.01% (31 runs sampled)
     WaitQueue.push(4k data) 1000000 times then WaitQueue.pop() speed test x 409,826 ops/sec ±30.73% (28 runs sampled)
 
-### 1.0.3(Use LinkList)
+### 1.0.3(Use LinkedList)
 
     .push() 1k data speed test x 511,367 ops/sec ±31.07% (27 runs sampled)
     .unshift() 1k data speed test x 269,995 ops/sec ±39.60% (14 runs sampled)
@@ -157,160 +172,156 @@ Sample data in Macbook Pro MF839/8GB
     .unshift() 4k data speed test x 115 ops/sec ±2.15% (71 runs sampled)
     .shift() `wait too long, I didn't wait for the result, I guess is about 110/s`
 
-
 ## Example: Iterator
 
 use for ... of to get all values
 
 ```js
-'use strict'
-const WaitQueue = require('wait-queue')
-const wq = new WaitQueue
+'use strict';
+const WaitQueue = require('wait-queue');
+const wq = new WaitQueue();
 
-wq.push(1,2,3,4,5)
+wq.push(1, 2, 3, 4, 5);
 
-console.log('length', wq.length)
-for(var n of wq){
-    console.log(n)
+console.log('length', wq.length);
+for (var n of wq) {
+  console.log(n);
 }
 ```
 
 ## Example: Multi Worker
 
 ```js
-'use strict'
-const WaitQueue = require('wait-queue')
-const wq = new WaitQueue
+'use strict';
+const WaitQueue = require('wait-queue');
+const wq = new WaitQueue();
 
 // worker loop
-function run_worker(id, time){
-    var loop = function(){
-        // get item at the front of the queue
-        wq.shift()
-        .then((item)=>{
-            console.log('worker-' + id)
-            console.log('  queue-len', wq.queue.length, 'item', item)
-            setTimeout(loop, time)
-        })
-    }
-    loop()
+function run_worker(id, time) {
+  var loop = function() {
+    // get item at the front of the queue
+    wq.shift().then(item => {
+      console.log('worker-' + id);
+      console.log('  queue-len', wq.queue.length, 'item', item);
+      setTimeout(loop, time);
+    });
+  };
+  loop();
 }
 
 // worker-a use 1s every task
-run_worker('a', 1000)
+run_worker('a', 1000);
 // worker-b use 2s every task
-run_worker('b', 2000)
+run_worker('b', 2000);
 // worker-c use 5s every task
-run_worker('c', 5000)
+run_worker('c', 5000);
 
 // add a task every 500ms
-for(var n=0; n<20; n++){
-    wq.push(n)
+for (var n = 0; n < 20; n++) {
+  wq.push(n);
 }
 ```
 
 ## Example: Push a function
 
 ```js
-'use strict'
-const WaitQueue = require('wait-queue')
-const wq = new WaitQueue
+'use strict';
+const WaitQueue = require('wait-queue');
+const wq = new WaitQueue();
 
-// there's no task here 
-wq.shift()
-.then((item)=>{
-    item.call()
-})
+// there's no task here
+wq.shift().then(item => {
+  item.call();
+});
 
 // add a function as item
-wq.push(function(){
-    console.log('a function')
-})
+wq.push(function() {
+  console.log('a function');
+});
 ```
 
 ## Example: Loop Tasks
 
 ```js
-'use strict'
-const WaitQueue = require('wait-queue')
-const wq = new WaitQueue
+'use strict';
+const WaitQueue = require('wait-queue');
+const wq = new WaitQueue();
 
-function loop(){
-    // put first element out of queue
-    wq.shift()
-    .then(function(item){
-        // do some job on item
-        console.log(item)
-        // do next loop
-        setImmediate(loop)
+function loop() {
+  // put first element out of queue
+  wq.shift()
+    .then(function(item) {
+      // do some job on item
+      console.log(item);
+      // do next loop
+      setImmediate(loop);
     })
-    .catch(function(e){
-        console.error('error', e)
-        setImmediate(loop)
-    })
+    .catch(function(e) {
+      console.error('error', e);
+      setImmediate(loop);
+    });
 }
-setImmediate(loop)
+setImmediate(loop);
 
-var taskID = 0
-var interval
+var taskID = 0;
+var interval;
 // add a task every 1s
-interval = setInterval(function(){
-    wq.push({
-        taskid: taskID++
-    })
-}, 1000)
+interval = setInterval(function() {
+  wq.push({
+    taskid: taskID++,
+  });
+}, 1000);
 ```
 
 ## Using with co
 
 ```js
-'use strict'
-const WaitQueue = require('wait-queue')
-const co = require('co')
-const wq = new WaitQueue
+'use strict';
+const WaitQueue = require('wait-queue');
+const co = require('co');
+const wq = new WaitQueue();
 
-co(function *(){
-    while(true){
-        let item = yield wq.shift()
-        // catch errors from runTask, so that it won't stop the task loop
-        try{
-            yield runTask(item)
-        }catch(e){
-            // output errors
-            console.error('error', item)
-            // you can re do task from here
-            wq.push(item)
-            console.log('add error item to end of queue')
-        }
+co(function*() {
+  while (true) {
+    let item = yield wq.shift();
+    // catch errors from runTask, so that it won't stop the task loop
+    try {
+      yield runTask(item);
+    } catch (e) {
+      // output errors
+      console.error('error', item);
+      // you can re do task from here
+      wq.push(item);
+      console.log('add error item to end of queue');
     }
-})
+  }
+});
 
-function runTask(item){
-    return new Promise(function(resolve, reject){
-        // a task will run 2s
-        setTimeout(function(){
-            if(Math.random() > 0.8){
-                return reject(new Error('some unknown error'))
-            }
-            console.log('done', item)
-            resolve()
-        }, 1000)
-    })
+function runTask(item) {
+  return new Promise(function(resolve, reject) {
+    // a task will run 2s
+    setTimeout(function() {
+      if (Math.random() > 0.8) {
+        return reject(new Error('some unknown error'));
+      }
+      console.log('done', item);
+      resolve();
+    }, 1000);
+  });
 }
 
 // add a task every 1s
-var taskID = 0
-setInterval(function(){
-    wq.push({
-        taskid: taskID++
-    })
-}, 1000)
-
+var taskID = 0;
+setInterval(function() {
+  wq.push({
+    taskid: taskID++,
+  });
+}, 1000);
 ```
 
 ## License
 
-  MIT
+MIT
 
 [npm-image]: https://img.shields.io/npm/v/wait-queue.svg
 [npm-url]: https://npmjs.org/package/wait-queue

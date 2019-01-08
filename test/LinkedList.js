@@ -1,7 +1,7 @@
 var assert = require('assert')
-var LinkList = require('../libs/LinkList')
-describe('LinkList', function () {
-    var ll = new LinkList()
+var LinkedList = require('../dist/libs/LinkedList');
+describe('LinkedList', function () {
+    var ll = new LinkedList()
     beforeEach(function () {
         // clear waitqueue
         ll.empty()
