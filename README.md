@@ -64,7 +64,7 @@ setTimeout(function() {
 
 ## Requirements
 
-**Build**: Node.js >= 6.0.0
+**Build**: Node.js >= 6.9.0
 
 **Run**: Node.js >= 4.0.0
 
