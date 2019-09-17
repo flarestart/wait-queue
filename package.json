@@ -1,13 +1,13 @@
 {
   "name": "wait-queue",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "A javascript wait queue object handle infinity loop tasks more efficiently (using ES6 class and promise)",
   "main": "dist/index.js",
   "directories": {
     "test": "tests"
   },
   "scripts": {
-    "build": "tsc && babel dist --out-dir dist",
+    "build": "tsc",
     "lint": "tslint --project tsconfig.json",
     "test": "mocha",
     "benchmark": "node ./benchmark/"
@@ -28,13 +28,15 @@
   },
   "homepage": "https://github.com/flarestart/wait-queue#readme",
   "devDependencies": {
-    "@babel/cli": "^7.2.3",
-    "@babel/core": "^7.2.2",
-    "@babel/preset-env": "^7.2.3",
     "@types/node": "^10.12.18",
     "benchmark": "^2.1.4",
-    "mocha": "^4.1.0",
-    "tslint": "^5.12.0",
+    "mocha": "^6.2.0",
+    "tslint": "^5.20.0",
     "typescript": "^3.2.2"
-  }
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.MD"
+  ]
 }

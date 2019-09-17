@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
-    "target": "es6",
+    "target": "es5",
+    "lib": ["es2015"],
     "module": "commonjs",
     "moduleResolution": "node",
     "noUnusedLocals": true,
@@ -11,8 +12,7 @@
     "preserveConstEnums": true,
     "declaration": true,
     "outDir": "./dist",
-    "strict": true,
-    // "sourceMap": true
+    "strict": true
   },
   "include": ["src/**/*.ts"]
 }

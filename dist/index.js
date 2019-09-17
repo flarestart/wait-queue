@@ -1,180 +1,160 @@
 "use strict";
+var __values = (this && this.__values) || function (o) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator], i = 0;
+    if (m) return m.call(o);
+    return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+};
+var __read = (this && this.__read) || function (o, n) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator];
+    if (!m) return o;
+    var i = m.call(o), r, ar = [], e;
+    try {
+        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
+    }
+    catch (error) { e = { error: error }; }
+    finally {
+        try {
+            if (r && !r.done && (m = i["return"])) m.call(i);
+        }
+        finally { if (e) throw e.error; }
+    }
+    return ar;
+};
+var __spread = (this && this.__spread) || function () {
+    for (var ar = [], i = 0; i < arguments.length; i++) ar = ar.concat(__read(arguments[i]));
+    return ar;
+};
 /*
  * Javascript WaitQueue Object
  * https://github.com/flarestart/wait-queue
  */
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
 var LinkedList = require('./libs/LinkedList');
-
-var nextTick = function () {
-  if (typeof process === 'object' && process.nextTick) {
-    return process.nextTick;
-  }
-
-  if (typeof setImmediate === 'function') {
-    return setImmediate;
-  }
-
-  return setTimeout;
-}();
-
-var WaitQueue =
-/*#__PURE__*/
-function () {
-  function WaitQueue() {
-    _classCallCheck(this, WaitQueue);
-
-    this.queue = new LinkedList();
-    this.listeners = new LinkedList();
-  }
-
-  _createClass(WaitQueue, [{
-    key: "empty",
-    value: function empty() {
-      this.queue = new LinkedList();
+var nextTick = (function () {
+    if (typeof process === 'object' && process.nextTick) {
+        return process.nextTick;
     }
-  }, {
-    key: "clear",
-    value: function clear() {
-      this.queue = new LinkedList();
+    if (typeof setImmediate === 'function') {
+        return setImmediate;
     }
-  }, {
-    key: "clearListeners",
-    value: function clearListeners() {
-      var _iteratorNormalCompletion = true;
-      var _didIteratorError = false;
-      var _iteratorError = undefined;
-
-      try {
-        for (var _iterator = this.listeners[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          var listener = _step.value;
-          listener(new Error('Clear Listeners'));
-        }
-      } catch (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion && _iterator.return != null) {
-            _iterator.return();
-          }
-        } finally {
-          if (_didIteratorError) {
-            throw _iteratorError;
-          }
-        }
-      }
-
-      this.listeners = new LinkedList();
+    return setTimeout;
+})();
+var WaitQueue = /** @class */ (function () {
+    function WaitQueue() {
+        this.queue = new LinkedList();
+        this.listeners = new LinkedList();
     }
-  }, {
-    key: "unshift",
-    value: function unshift() {
-      var _this$queue;
-
-      (_this$queue = this.queue).unshift.apply(_this$queue, arguments);
-
-      this._flush();
-
-      return this.length;
-    }
-  }, {
-    key: "push",
-    value: function push() {
-      var _this$queue2;
-
-      (_this$queue2 = this.queue).push.apply(_this$queue2, arguments);
-
-      this._flush();
-
-      return this.length;
-    }
-  }, {
-    key: "shift",
-    value: function shift() {
-      var _this = this;
-
-      return new Promise(function (resolve, reject) {
-        if (_this.queue.length > 0) {
-          return resolve(_this.queue.shift());
-        } else {
-          _this.listeners.push(function (err) {
-            if (err) {
-              return reject(err);
-            }
-
-            return resolve(_this.queue.shift());
-          });
-        }
-      });
-    }
-  }, {
-    key: "pop",
-    value: function pop() {
-      var _this2 = this;
-
-      return new Promise(function (resolve, reject) {
-        if (_this2.queue.length > 0) {
-          return resolve(_this2.queue.pop());
-        } else {
-          _this2.listeners.push(function (err) {
-            if (err) {
-              return reject(err);
-            }
-
-            return resolve(_this2.queue.pop());
-          });
-        }
-      });
-    }
-  }, {
-    key: "_flush",
-    value: function _flush() {
-      if (this.queue.length > 0 && this.listeners.length > 0) {
-        var listener = this.listeners.shift();
-        listener.call(this); // delay next loop
-
-        nextTick(this._flush.bind(this));
-      }
-    }
-  }, {
-    key: "length",
-    get: function get() {
-      return this.queue.length;
-    }
-  }]);
-
-  return WaitQueue;
-}();
-
-if (typeof Symbol !== 'undefined') {
-  WaitQueue.prototype[Symbol.iterator] = function () {
-    var node = this.queue._front;
-    return {
-      next() {
-        if (node === null) {
-          return {
-            value: null,
-            done: true
-          };
-        } else {
-          var r = {
-            value: node.item,
-            done: false
-          };
-          node = node._next;
-          return r;
-        }
-      }
-
+    Object.defineProperty(WaitQueue.prototype, "length", {
+        get: function () {
+            return this.queue.length;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    WaitQueue.prototype.empty = function () {
+        this.queue = new LinkedList();
     };
-  };
+    WaitQueue.prototype.clear = function () {
+        this.queue = new LinkedList();
+    };
+    WaitQueue.prototype.clearListeners = function () {
+        var e_1, _a;
+        try {
+            for (var _b = __values(this.listeners), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var listener = _c.value;
+                listener(new Error('Clear Listeners'));
+            }
+        }
+        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+            }
+            finally { if (e_1) throw e_1.error; }
+        }
+        this.listeners = new LinkedList();
+    };
+    WaitQueue.prototype.unshift = function () {
+        var items = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            items[_i] = arguments[_i];
+        }
+        var _a;
+        (_a = this.queue).unshift.apply(_a, __spread(items));
+        this._flush();
+        return this.length;
+    };
+    WaitQueue.prototype.push = function () {
+        var items = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            items[_i] = arguments[_i];
+        }
+        var _a;
+        (_a = this.queue).push.apply(_a, __spread(items));
+        this._flush();
+        return this.length;
+    };
+    WaitQueue.prototype.shift = function () {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            if (_this.queue.length > 0) {
+                return resolve(_this.queue.shift());
+            }
+            else {
+                _this.listeners.push(function (err) {
+                    if (err) {
+                        return reject(err);
+                    }
+                    return resolve(_this.queue.shift());
+                });
+            }
+        });
+    };
+    WaitQueue.prototype.pop = function () {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            if (_this.queue.length > 0) {
+                return resolve(_this.queue.pop());
+            }
+            else {
+                _this.listeners.push(function (err) {
+                    if (err) {
+                        return reject(err);
+                    }
+                    return resolve(_this.queue.pop());
+                });
+            }
+        });
+    };
+    WaitQueue.prototype._flush = function () {
+        if (this.queue.length > 0 && this.listeners.length > 0) {
+            var listener = this.listeners.shift();
+            listener.call(this);
+            // delay next loop
+            nextTick(this._flush.bind(this));
+        }
+    };
+    return WaitQueue;
+}());
+if (typeof Symbol !== 'undefined') {
+    WaitQueue.prototype[Symbol.iterator] = function () {
+        var node = this.queue._front;
+        return {
+            next: function () {
+                if (node === null) {
+                    return { value: null, done: true };
+                }
+                else {
+                    var r = { value: node.item, done: false };
+                    node = node._next;
+                    return r;
+                }
+            },
+        };
+    };
 }
-
 module.exports = WaitQueue;
