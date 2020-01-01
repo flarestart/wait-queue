@@ -14,7 +14,7 @@ const nextTick = (() => {
   return setTimeout;
 })();
 
-class WaitQueue {
+class WaitQueue<T> {
   [Symbol.iterator]: () => { next: () => { value: any; done: boolean } };
 
   queue = new LinkedList();
@@ -35,17 +35,17 @@ class WaitQueue {
     }
     this.listeners = new LinkedList();
   }
-  unshift(...items: any[]) {
+  unshift(...items: T[]) {
     this.queue.unshift(...items);
     this._flush();
     return this.length;
   }
-  push(...items: any[]) {
+  push(...items: T[]) {
     this.queue.push(...items);
     this._flush();
     return this.length;
   }
-  shift() {
+  shift(): Promise<T> {
     return new Promise((resolve, reject) => {
       if (this.queue.length > 0) {
         return resolve(this.queue.shift());
@@ -59,7 +59,7 @@ class WaitQueue {
       }
     });
   }
-  pop() {
+  pop(): Promise<T> {
     return new Promise((resolve, reject) => {
       if (this.queue.length > 0) {
         return resolve(this.queue.pop());
