@@ -30,11 +30,11 @@ Examples
 $ npm install wait-queue
 ```
 
-### await / async
+### TypeScript
 
-```js
-const WaitQueue = require('wait-queue');
-const wq = new WaitQueue();
+```typescript
+import WaitQueue from 'wait-queue';
+const wq = new WaitQueue<string>();
 
 async function run() {
   const item = await wq.shift();
@@ -47,6 +47,8 @@ setTimeout(() => {
 
 run();
 ```
+
+### JS
 
 ```js
 const WaitQueue = require('wait-queue');
@@ -66,9 +68,18 @@ setTimeout(function() {
 
 **Build**: Node.js >= 6.9.0
 
-**Run**: Node.js >= 4.0.0
+**Run**: Node.js >= 6.9.0
 
 ## Change log
+
+### 1.1.3
+
+* Remove node version 4 support, add node 10
+* Add TypeScript Generics
+
+### 1.1.2
+
+* Remove babel
 
 ### 1.1.1
 
