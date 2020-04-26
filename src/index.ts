@@ -2,16 +2,14 @@
  * Javascript WaitQueue Object
  * https://github.com/flarestart/wait-queue
  */
-const LinkedList = require('./libs/LinkedList');
+import LinkedList from './libs/LinkedList';
 
-const nextTick = (() => {
-  if (typeof process === 'object' && process.nextTick) {
-    return process.nextTick;
-  }
+const nextLoop = (() => {
   if (typeof setImmediate === 'function') {
     return setImmediate;
   }
-  return setTimeout;
+  /* istanbul ignore next */
+  return (fn: (...args: any[]) => void) => setTimeout(fn, 0);
 })();
 
 class WaitQueue<T> {
@@ -20,27 +18,27 @@ class WaitQueue<T> {
   queue = new LinkedList();
   listeners = new LinkedList();
 
-  get length() {
+  get length(): number {
     return this.queue.length;
   }
-  empty() {
+  empty(): void {
     this.queue = new LinkedList();
   }
-  clear() {
+  clear(): void {
     this.queue = new LinkedList();
   }
-  clearListeners() {
+  clearListeners(): void {
     for (const listener of this.listeners) {
       listener(new Error('Clear Listeners'));
     }
     this.listeners = new LinkedList();
   }
-  unshift(...items: T[]) {
+  unshift(...items: T[]): number {
     this.queue.unshift(...items);
     this._flush();
     return this.length;
   }
-  push(...items: T[]) {
+  push(...items: T[]): number {
     this.queue.push(...items);
     this._flush();
     return this.length;
@@ -74,18 +72,18 @@ class WaitQueue<T> {
     });
   }
 
-  private _flush() {
+  private _flush(): void {
     if (this.queue.length > 0 && this.listeners.length > 0) {
       const listener = this.listeners.shift();
       listener.call(this);
       // delay next loop
-      nextTick(this._flush.bind(this));
+      nextLoop(this._flush.bind(this));
     }
   }
 }
 
-if (typeof Symbol !== 'undefined') {
-  WaitQueue.prototype[Symbol.iterator] = function() {
+if (typeof Symbol === 'function' && typeof Symbol.iterator === 'symbol') {
+  WaitQueue.prototype[Symbol.iterator] = function () {
     let node = this.queue._front;
     return {
       next() {
@@ -101,4 +99,11 @@ if (typeof Symbol !== 'undefined') {
   };
 }
 
-export = WaitQueue;
+export default WaitQueue;
+module.exports = WaitQueue;
+Object.defineProperty(WaitQueue, '__esModule', { value: true });
+Object.defineProperty(WaitQueue, 'default', {
+  get() {
+    return WaitQueue;
+  },
+});
