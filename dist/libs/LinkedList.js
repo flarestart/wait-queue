@@ -1,9 +1,10 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 function createNode(item) {
     return {
         _next: null,
         _prev: null,
-        item: item,
+        item: item
     };
 }
 var LinkedList = /** @class */ (function () {
@@ -102,7 +103,8 @@ var LinkedList = /** @class */ (function () {
     };
     return LinkedList;
 }());
-if (Symbol.iterator) {
+/* istanbul ignore next */
+if (typeof Symbol === 'function' && typeof Symbol.iterator === 'symbol') {
     LinkedList.prototype[Symbol.iterator] = function () {
         var node = this._front;
         return {
@@ -113,8 +115,8 @@ if (Symbol.iterator) {
                 var r = { value: node.item, done: false };
                 node = node._next;
                 return r;
-            },
+            }
         };
     };
 }
-module.exports = LinkedList;
+exports.default = LinkedList;

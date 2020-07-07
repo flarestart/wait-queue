@@ -1,6 +1,6 @@
-interface INode {
-    _next: INode | null;
-    _prev: INode | null;
+interface Node {
+    _next: Node | null;
+    _prev: Node | null;
     item: any;
 }
 declare class LinkedList {
@@ -11,13 +11,13 @@ declare class LinkedList {
         };
     };
     _length: number;
-    _front: INode | null;
-    _end: INode | null;
-    readonly length: number;
+    _front: Node | null;
+    _end: Node | null;
+    get length(): number;
     empty(): void;
     push(...items: any[]): number;
     shift(): any;
     unshift(...items: any[]): number;
     pop(): any;
 }
-export = LinkedList;
+export default LinkedList;
