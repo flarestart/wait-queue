@@ -1,5 +1,7 @@
 # wait-queue
 
+[![Travis CI][ci-image]][ci-url]
+[![Coveralls][coverage-image]][coverage-url]
 [![NPM version][npm-image]][npm-url]
 [![Downloads][downloads-image]][downloads-url]
 
@@ -66,9 +68,7 @@ setTimeout(function() {
 
 ## Requirements
 
-**Build**: Node.js >= 6.9.0
-
-**Run**: Node.js >= 6.9.0
+**Build**: Node.js >= 8.x
 
 ## Change log
 
@@ -334,6 +334,10 @@ setInterval(function() {
 
 MIT
 
+[coverage-image]: https://img.shields.io/coveralls/flarestart/wait-queue.svg
+[coverage-url]: https://coveralls.io/github/flarestart/wait-queue
+[ci-image]: https://img.shields.io/travis/flarestart/wait-queue.svg?branch=master
+[ci-url]: https://travis-ci.org/flarestart/wait-queue
 [npm-image]: https://img.shields.io/npm/v/wait-queue.svg
 [npm-url]: https://npmjs.org/package/wait-queue
 [downloads-image]: http://img.shields.io/npm/dm/wait-queue.svg

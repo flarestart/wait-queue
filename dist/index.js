@@ -1,13 +1,14 @@
 "use strict";
-var __values = (this && this.__values) || function (o) {
-    var m = typeof Symbol === "function" && o[Symbol.iterator], i = 0;
+var __values = (this && this.__values) || function(o) {
+    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
     if (m) return m.call(o);
-    return {
+    if (o && typeof o.length === "number") return {
         next: function () {
             if (o && i >= o.length) o = void 0;
             return { value: o && o[i++], done: !o };
         }
     };
+    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
 };
 var __read = (this && this.__read) || function (o, n) {
     var m = typeof Symbol === "function" && o[Symbol.iterator];
@@ -29,24 +30,23 @@ var __spread = (this && this.__spread) || function () {
     for (var ar = [], i = 0; i < arguments.length; i++) ar = ar.concat(__read(arguments[i]));
     return ar;
 };
+Object.defineProperty(exports, "__esModule", { value: true });
 /*
  * Javascript WaitQueue Object
  * https://github.com/flarestart/wait-queue
  */
-var LinkedList = require('./libs/LinkedList');
-var nextTick = (function () {
-    if (typeof process === 'object' && process.nextTick) {
-        return process.nextTick;
-    }
+var LinkedList_1 = require("./libs/LinkedList");
+var nextLoop = (function () {
     if (typeof setImmediate === 'function') {
         return setImmediate;
     }
-    return setTimeout;
+    /* istanbul ignore next */
+    return function (fn) { return setTimeout(fn, 0); };
 })();
 var WaitQueue = /** @class */ (function () {
     function WaitQueue() {
-        this.queue = new LinkedList();
-        this.listeners = new LinkedList();
+        this.queue = new LinkedList_1.default();
+        this.listeners = new LinkedList_1.default();
     }
     Object.defineProperty(WaitQueue.prototype, "length", {
         get: function () {
@@ -56,10 +56,10 @@ var WaitQueue = /** @class */ (function () {
         configurable: true
     });
     WaitQueue.prototype.empty = function () {
-        this.queue = new LinkedList();
+        this.queue = new LinkedList_1.default();
     };
     WaitQueue.prototype.clear = function () {
-        this.queue = new LinkedList();
+        this.queue = new LinkedList_1.default();
     };
     WaitQueue.prototype.clearListeners = function () {
         var e_1, _a;
@@ -76,24 +76,24 @@ var WaitQueue = /** @class */ (function () {
             }
             finally { if (e_1) throw e_1.error; }
         }
-        this.listeners = new LinkedList();
+        this.listeners = new LinkedList_1.default();
     };
     WaitQueue.prototype.unshift = function () {
+        var _a;
         var items = [];
         for (var _i = 0; _i < arguments.length; _i++) {
             items[_i] = arguments[_i];
         }
-        var _a;
         (_a = this.queue).unshift.apply(_a, __spread(items));
         this._flush();
         return this.length;
     };
     WaitQueue.prototype.push = function () {
+        var _a;
         var items = [];
         for (var _i = 0; _i < arguments.length; _i++) {
             items[_i] = arguments[_i];
         }
-        var _a;
         (_a = this.queue).push.apply(_a, __spread(items));
         this._flush();
         return this.length;
@@ -135,12 +135,12 @@ var WaitQueue = /** @class */ (function () {
             var listener = this.listeners.shift();
             listener.call(this);
             // delay next loop
-            nextTick(this._flush.bind(this));
+            nextLoop(this._flush.bind(this));
         }
     };
     return WaitQueue;
 }());
-if (typeof Symbol !== 'undefined') {
+if (typeof Symbol === 'function' && typeof Symbol.iterator === 'symbol') {
     WaitQueue.prototype[Symbol.iterator] = function () {
         var node = this.queue._front;
         return {
@@ -157,4 +157,11 @@ if (typeof Symbol !== 'undefined') {
         };
     };
 }
+exports.default = WaitQueue;
 module.exports = WaitQueue;
+Object.defineProperty(WaitQueue, '__esModule', { value: true });
+Object.defineProperty(WaitQueue, 'default', {
+    get: function () {
+        return WaitQueue;
+    },
+});

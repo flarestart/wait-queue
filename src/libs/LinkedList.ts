@@ -2,17 +2,17 @@
  * Javascript WaitQueue Object in ES5
  * https://github.com/flarestart/wait-queue-es5
  */
-interface INode {
-  _next: INode | null;
-  _prev: INode | null;
+interface Node {
+  _next: Node | null;
+  _prev: Node | null;
   item: any;
 }
 
-function createNode(item: any): INode {
+function createNode(item: any): Node {
   return {
     _next: null,
     _prev: null,
-    item,
+    item
   };
 }
 
@@ -20,8 +20,8 @@ class LinkedList {
   [Symbol.iterator]: () => { next: () => { value: any; done: boolean } };
 
   _length = 0;
-  _front: INode | null = null;
-  _end: INode | null = null;
+  _front: Node | null = null;
+  _end: Node | null = null;
 
   get length() {
     return this._length;
@@ -32,7 +32,7 @@ class LinkedList {
     this._end = null;
   }
   push(...items: any[]) {
-    items.forEach((item) => {
+    items.forEach(item => {
       const node = createNode(item);
       if (this._front && this._end) {
         this._end._next = node;
@@ -95,7 +95,8 @@ class LinkedList {
   }
 }
 
-if (Symbol.iterator) {
+/* istanbul ignore next */
+if (typeof Symbol === 'function' && typeof Symbol.iterator === 'symbol') {
   LinkedList.prototype[Symbol.iterator] = function() {
     let node = this._front;
     return {
@@ -106,9 +107,9 @@ if (Symbol.iterator) {
         const r = { value: node.item, done: false };
         node = node._next;
         return r;
-      },
+      }
     };
   };
 }
 
-export = LinkedList;
+export default LinkedList;

@@ -1,11 +1,11 @@
 'use strict';
-var Benchmark = require('benchmark');
-var suite = new Benchmark.Suite();
-var WaitQueue = require('../dist/index');
-var LinkedList = require('../dist/libs/LinkedList');
-var Buffer = require('buffer').Buffer;
+const Benchmark = require('benchmark');
+const suite = new Benchmark.Suite();
+const WaitQueue = require('../dist/index').default;
+const LinkedList = require('../dist/libs/LinkedList').default;
+const Buffer = require('buffer').Buffer;
 
-var newBuffer;
+let newBuffer;
 if (typeof Buffer.allocUnsafe === 'function') {
   newBuffer = function(size) {
     return Buffer.allocUnsafe(size);
@@ -16,8 +16,8 @@ if (typeof Buffer.allocUnsafe === 'function') {
   };
 }
 
-var wq = new WaitQueue();
-var array = [];
+const wq = new WaitQueue();
+let array = [];
 suite.add('Array.push(1k data) speed test', function() {
   array.push(newBuffer(1024));
 });
@@ -34,7 +34,7 @@ suite.add(
     },
     onCycle: function() {
       array.push(newBuffer(1024));
-    },
+    }
   }
 );
 suite.add('WaitQueue.push(1k data) speed test', function() {
@@ -62,7 +62,7 @@ suite.add(
     },
     onCycle: function() {
       wq.push(newBuffer(1024));
-    },
+    }
   }
 );
 suite.add(
@@ -78,7 +78,7 @@ suite.add(
     },
     onCycle: function() {
       wq.unshift(newBuffer(1024));
-    },
+    }
   }
 );
 suite.add('Array.push(4k data) speed test', function() {
@@ -97,7 +97,7 @@ suite.add(
     },
     onCycle: function() {
       array.push(newBuffer(4096));
-    },
+    }
   }
 );
 suite.add('WaitQueue.push(4k data) speed test', function() {
@@ -119,7 +119,7 @@ suite.add(
     },
     onCycle: function() {
       wq.push(newBuffer(4096));
-    },
+    }
   }
 );
 suite.add(
@@ -135,7 +135,7 @@ suite.add(
     },
     onCycle: function() {
       wq.unshift(newBuffer(4096));
-    },
+    }
   }
 );
 

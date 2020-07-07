@@ -1,20 +1,21 @@
-declare class WaitQueue {
+import LinkedList from './libs/LinkedList';
+declare class WaitQueue<T> {
     [Symbol.iterator]: () => {
         next: () => {
             value: any;
             done: boolean;
         };
     };
-    queue: any;
-    listeners: any;
-    readonly length: any;
+    queue: LinkedList;
+    listeners: LinkedList;
+    get length(): number;
     empty(): void;
     clear(): void;
     clearListeners(): void;
-    unshift(...items: any[]): any;
-    push(...items: any[]): any;
-    shift(): Promise<{}>;
-    pop(): Promise<{}>;
+    unshift(...items: T[]): number;
+    push(...items: T[]): number;
+    shift(): Promise<T>;
+    pop(): Promise<T>;
     private _flush;
 }
-export = WaitQueue;
+export default WaitQueue;
