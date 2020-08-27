@@ -13,7 +13,7 @@ WaitQueue is an async implements of Array
 
 - [How to use](#how-to-use)
 - [Requirements](#requirements)
-- [Change Log](#change-log)
+- [Change Log](./CHANGELOG.md)
 - [Properties](#properties)
 - [Methods](#methods)
 - [Benchmark](#benchmark)
@@ -69,33 +69,6 @@ setTimeout(function() {
 ## Requirements
 
 **Build**: Node.js >= 8.x
-
-## Change log
-
-### 1.1.3
-
-* Remove node version 4 support, add node 10
-* Add TypeScript Generics
-
-### 1.1.2
-
-* Remove babel
-
-### 1.1.1
-
-* Rewrite with TypeScript
-* Add Travis CI support
-
-### 1.1.0
-
-- Improve benchmark code and add test code
-- Remove `TerminateError` and `.terminate()` method
-- Add ES6 `Iterator` to WaitQueue. use `for(... of wq){...}`
-- .push(), .unshift() can receive multi values `.push(1,2,3)`
-
-### 1.0.3
-
-- Replace `wq.queue` from `Array` to `LinkedList`, because do shift() operation on `Array` of 10,000,000 items cost too much time
 
 ## Properties
 
