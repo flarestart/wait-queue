@@ -30,12 +30,14 @@ var __spread = (this && this.__spread) || function () {
     for (var ar = [], i = 0; i < arguments.length; i++) ar = ar.concat(__read(arguments[i]));
     return ar;
 };
-Object.defineProperty(exports, "__esModule", { value: true });
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 /*
  * Javascript WaitQueue Object
  * https://github.com/flarestart/wait-queue
  */
-var LinkedList_1 = require("./libs/LinkedList");
+var LinkedList_1 = __importDefault(require("./libs/LinkedList"));
 var nextLoop = (function () {
     if (typeof setImmediate === 'function') {
         return setImmediate;
@@ -157,11 +159,4 @@ if (typeof Symbol === 'function' && typeof Symbol.iterator === 'symbol') {
         };
     };
 }
-exports.default = WaitQueue;
 module.exports = WaitQueue;
-Object.defineProperty(WaitQueue, '__esModule', { value: true });
-Object.defineProperty(WaitQueue, 'default', {
-    get: function () {
-        return WaitQueue;
-    },
-});

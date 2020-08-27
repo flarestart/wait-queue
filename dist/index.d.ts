@@ -18,4 +18,4 @@ declare class WaitQueue<T> {
     pop(): Promise<T>;
     private _flush;
 }
-export default WaitQueue;
+export = WaitQueue;

@@ -99,11 +99,4 @@ if (typeof Symbol === 'function' && typeof Symbol.iterator === 'symbol') {
   };
 }
 
-export default WaitQueue;
-module.exports = WaitQueue;
-Object.defineProperty(WaitQueue, '__esModule', { value: true });
-Object.defineProperty(WaitQueue, 'default', {
-  get() {
-    return WaitQueue;
-  },
-});
+export = WaitQueue;

@@ -1,7 +1,7 @@
 'use strict';
 const Benchmark = require('benchmark');
 const suite = new Benchmark.Suite();
-const WaitQueue = require('../dist/index').default;
+const WaitQueue = require('../dist/index');
 const LinkedList = require('../dist/libs/LinkedList').default;
 const Buffer = require('buffer').Buffer;
 
