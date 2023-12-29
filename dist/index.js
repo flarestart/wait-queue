@@ -104,14 +104,19 @@ var WaitQueue = /** @class */ (function () {
         var _this = this;
         return new Promise(function (resolve, reject) {
             if (_this.queue.length > 0) {
-                return resolve(_this.queue.shift());
+                switch (type) {
+                    case 'SHIFT':
+                        return resolve(_this.queue.shift());
+                    case 'POP':
+                        return resolve(_this.queue.pop());
+                }
             }
             else {
                 var timedOut_1 = false;
                 if (timeout && timeout > 0) {
                     setTimeout(function () {
                         timedOut_1 = true;
-                        reject("pop timed out");
+                        reject("timed out");
                     }, timeout);
                 }
                 _this.listeners.push(function (err) {

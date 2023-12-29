@@ -47,14 +47,19 @@ class WaitQueue<T> {
   private _remove(type: "SHIFT" | "POP", timeout?: number): Promise<T> {
     return new Promise((resolve, reject) => {
       if (this.queue.length > 0) {
-        return resolve(this.queue.shift());
+        switch (type) {
+          case 'SHIFT':
+            return resolve(this.queue.shift());
+          case 'POP':
+            return resolve(this.queue.pop());
+        }
       } else {
         let timedOut = false;
 
         if (timeout && timeout > 0) {
           setTimeout(() => {
             timedOut = true;
-            reject("pop timed out");
+            reject("timed out");
           }, timeout);
         }
 
@@ -69,7 +74,7 @@ class WaitQueue<T> {
 
           switch (type) {
             case 'SHIFT':
-             return resolve(this.queue.shift());
+              return resolve(this.queue.shift());
             case 'POP':
               return resolve(this.queue.pop());
           }
