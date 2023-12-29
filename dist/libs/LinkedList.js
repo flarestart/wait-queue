@@ -17,7 +17,7 @@ var LinkedList = /** @class */ (function () {
         get: function () {
             return this._length;
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     LinkedList.prototype.empty = function () {

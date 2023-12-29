@@ -43,33 +43,46 @@ class WaitQueue<T> {
     this._flush();
     return this.length;
   }
-  shift(): Promise<T> {
+
+  private _remove(type: "SHIFT" | "POP", timeout?: number): Promise<T> {
     return new Promise((resolve, reject) => {
       if (this.queue.length > 0) {
         return resolve(this.queue.shift());
       } else {
+        let timedOut = false;
+
+        if (timeout && timeout > 0) {
+          setTimeout(() => {
+            timedOut = true;
+            reject("pop timed out");
+          }, timeout);
+        }
+
         this.listeners.push((err: Error) => {
           if (err) {
             return reject(err);
           }
-          return resolve(this.queue.shift());
+
+          if (timedOut) {
+            return this._flush();
+          }
+
+          switch (type) {
+            case 'SHIFT':
+             return resolve(this.queue.shift());
+            case 'POP':
+              return resolve(this.queue.pop());
+          }
         });
       }
     });
   }
-  pop(): Promise<T> {
-    return new Promise((resolve, reject) => {
-      if (this.queue.length > 0) {
-        return resolve(this.queue.pop());
-      } else {
-        this.listeners.push((err: Error) => {
-          if (err) {
-            return reject(err);
-          }
-          return resolve(this.queue.pop());
-        });
-      }
-    });
+
+  shift(timeout?: number): Promise<T> {
+    return this._remove('SHIFT', timeout);
+  }
+  pop(timeout?: number): Promise<T> {
+    return this._remove('POP', timeout);
   }
 
   private _flush(): void {

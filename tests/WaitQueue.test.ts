@@ -78,6 +78,18 @@ describe('Methods of WaitQueue', function() {
     assert.ok(wq.pop() instanceof Promise);
   });
 
+  it('pop(timeout) should error out', async function() {
+    assert.rejects(wq.pop(1))
+  });
+
+  it('timed out pop should pop next one', async function() {
+    const p1 = wq.pop(1);
+    const p2 = wq.pop();
+    setTimeout(() => wq.push(1), 100);
+    assert.rejects(p1);
+    assert.strictEqual(await p2, 1);
+  })
+
   it('shift() should wait while empty', async function() {
     const obj = { name: 'test' };
     setTimeout(() => {

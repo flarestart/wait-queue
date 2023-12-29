@@ -54,7 +54,7 @@ var WaitQueue = /** @class */ (function () {
         get: function () {
             return this.queue.length;
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
     WaitQueue.prototype.empty = function () {
@@ -100,37 +100,42 @@ var WaitQueue = /** @class */ (function () {
         this._flush();
         return this.length;
     };
-    WaitQueue.prototype.shift = function () {
+    WaitQueue.prototype._remove = function (type, timeout) {
         var _this = this;
         return new Promise(function (resolve, reject) {
             if (_this.queue.length > 0) {
                 return resolve(_this.queue.shift());
             }
             else {
+                var timedOut_1 = false;
+                if (timeout && timeout > 0) {
+                    setTimeout(function () {
+                        timedOut_1 = true;
+                        reject("pop timed out");
+                    }, timeout);
+                }
                 _this.listeners.push(function (err) {
                     if (err) {
                         return reject(err);
                     }
-                    return resolve(_this.queue.shift());
+                    if (timedOut_1) {
+                        return _this._flush();
+                    }
+                    switch (type) {
+                        case 'SHIFT':
+                            return resolve(_this.queue.shift());
+                        case 'POP':
+                            return resolve(_this.queue.pop());
+                    }
                 });
             }
         });
     };
-    WaitQueue.prototype.pop = function () {
-        var _this = this;
-        return new Promise(function (resolve, reject) {
-            if (_this.queue.length > 0) {
-                return resolve(_this.queue.pop());
-            }
-            else {
-                _this.listeners.push(function (err) {
-                    if (err) {
-                        return reject(err);
-                    }
-                    return resolve(_this.queue.pop());
-                });
-            }
-        });
+    WaitQueue.prototype.shift = function (timeout) {
+        return this._remove('SHIFT', timeout);
+    };
+    WaitQueue.prototype.pop = function (timeout) {
+        return this._remove('POP', timeout);
     };
     WaitQueue.prototype._flush = function () {
         if (this.queue.length > 0 && this.listeners.length > 0) {
