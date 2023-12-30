@@ -7,17 +7,16 @@ import LinkedList from './libs/LinkedList';
 class WaitQueue<T> {
   [Symbol.iterator]: () => { next: () => { value: any; done: boolean } };
 
-  queue = new LinkedList();
-  listeners = new LinkedList();
+  queue = new LinkedList<T>();
+  listeners = new LinkedList<(err?: Error) => unknown>();
 
   get length(): number {
     return this.queue.length;
   }
   
-  numListeners(): number {
-    return this.listeners.length - this.numListenersDelta;
+  numWaiters(): number {
+    return this.listeners.length;
   }
-  numListenersDelta = 0;
 
   empty(): void {
     this.queue = new LinkedList();
@@ -25,20 +24,22 @@ class WaitQueue<T> {
   clear(): void {
     this.queue = new LinkedList();
   }
+
   clearListeners(): void {
     for (const listener of this.listeners) {
       listener(new Error('Clear Listeners'));
     }
     this.listeners = new LinkedList();
-    this.numListenersDelta = 0;
   }
-  unshift(...items: T[]): number {
-    this.queue.unshift(...items);
+  
+  unshift(item: T): number {
+    this.queue.unshift(item);
     this._flush();
     return this.length;
   }
-  push(...items: T[]): number {
-    this.queue.push(...items);
+
+  push(item: T): number {
+    this.queue.push(item);
     this._flush();
     return this.length;
   }
@@ -56,28 +57,16 @@ class WaitQueue<T> {
 
     return new Promise((resolve, reject) => {
       const self = this;
-      if (this.queue.length > 0) {
+
+      if (self.queue.length > 0) {
         return resolve(fn());
       } else {
-        let timedOut = false;
-        let timerId = (timeout && timeout > 0) ?
-          setTimeout(() => {
-            self.numListenersDelta++;
-            timedOut = true;
-            timerId = undefined;
-            reject(new Error("Timed Out"));
-          }, timeout) : undefined;
+        let timerId: NodeJS.Timeout | undefined;
 
-        this.listeners.push((err: Error) => {
+        const listener = self.listeners.push((err?: Error) => {
           if (timerId) {
             clearTimeout(timerId);
             timerId = undefined;
-          }
-
-          if (timedOut) {
-            self.numListenersDelta--;
-            // already rejected, doesn't matter if err via clearListeners
-            return;
           }
 
           if (err) {
@@ -86,6 +75,13 @@ class WaitQueue<T> {
 
           return resolve(fn());
         });
+        
+        timerId = (timeout && timeout > 0) ?
+          setTimeout(() => {
+            timerId = undefined;
+            self.listeners.remove(listener);
+            reject(new Error("Timed Out"));
+          }, timeout) : undefined;
       }
     });
   }
@@ -107,18 +103,7 @@ class WaitQueue<T> {
 
 if (typeof Symbol === 'function' && typeof Symbol.iterator === 'symbol') {
   WaitQueue.prototype[Symbol.iterator] = function () {
-    let node = this.queue._front;
-    return {
-      next() {
-        if (node === null) {
-          return { value: null, done: true };
-        } else {
-          const r = { value: node.item, done: false };
-          node = node._next;
-          return r;
-        }
-      },
-    };
+    return this.queue[Symbol.iterator]();
   };
 }
 

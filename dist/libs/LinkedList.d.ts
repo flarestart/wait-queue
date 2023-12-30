@@ -1,23 +1,25 @@
-interface Node {
-    _next: Node | null;
-    _prev: Node | null;
-    item: any;
+interface Node<T> {
+    _next: Node<T>;
+    _prev: Node<T>;
+    _removed?: boolean;
+    item: T;
 }
-declare class LinkedList {
+declare class LinkedList<T> {
     [Symbol.iterator]: () => {
         next: () => {
-            value: any;
+            value: T;
             done: boolean;
         };
     };
     _length: number;
-    _front: Node | null;
-    _end: Node | null;
-    get length(): number;
+    _head: Node<T>;
+    constructor();
     empty(): void;
-    push(...items: any[]): number;
-    unshift(...items: any[]): number;
-    pop(): any;
-    shift(): any;
+    get length(): number;
+    push(item: T): Node<T>;
+    unshift(item: T): Node<T>;
+    pop(): T;
+    shift(): T;
+    remove(node: Node<T>): void;
 }
 export default LinkedList;

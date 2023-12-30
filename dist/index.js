@@ -10,26 +10,6 @@ var __values = (this && this.__values) || function(o) {
     };
     throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
 };
-var __read = (this && this.__read) || function (o, n) {
-    var m = typeof Symbol === "function" && o[Symbol.iterator];
-    if (!m) return o;
-    var i = m.call(o), r, ar = [], e;
-    try {
-        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
-    }
-    catch (error) { e = { error: error }; }
-    finally {
-        try {
-            if (r && !r.done && (m = i["return"])) m.call(i);
-        }
-        finally { if (e) throw e.error; }
-    }
-    return ar;
-};
-var __spread = (this && this.__spread) || function () {
-    for (var ar = [], i = 0; i < arguments.length; i++) ar = ar.concat(__read(arguments[i]));
-    return ar;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -42,7 +22,6 @@ var WaitQueue = /** @class */ (function () {
     function WaitQueue() {
         this.queue = new LinkedList_1.default();
         this.listeners = new LinkedList_1.default();
-        this.numListenersDelta = 0;
     }
     Object.defineProperty(WaitQueue.prototype, "length", {
         get: function () {
@@ -51,8 +30,8 @@ var WaitQueue = /** @class */ (function () {
         enumerable: false,
         configurable: true
     });
-    WaitQueue.prototype.numListeners = function () {
-        return this.listeners.length - this.numListenersDelta;
+    WaitQueue.prototype.numWaiters = function () {
+        return this.listeners.length;
     };
     WaitQueue.prototype.empty = function () {
         this.queue = new LinkedList_1.default();
@@ -76,25 +55,14 @@ var WaitQueue = /** @class */ (function () {
             finally { if (e_1) throw e_1.error; }
         }
         this.listeners = new LinkedList_1.default();
-        this.numListenersDelta = 0;
     };
-    WaitQueue.prototype.unshift = function () {
-        var _a;
-        var items = [];
-        for (var _i = 0; _i < arguments.length; _i++) {
-            items[_i] = arguments[_i];
-        }
-        (_a = this.queue).unshift.apply(_a, __spread(items));
+    WaitQueue.prototype.unshift = function (item) {
+        this.queue.unshift(item);
         this._flush();
         return this.length;
     };
-    WaitQueue.prototype.push = function () {
-        var _a;
-        var items = [];
-        for (var _i = 0; _i < arguments.length; _i++) {
-            items[_i] = arguments[_i];
-        }
-        (_a = this.queue).push.apply(_a, __spread(items));
+    WaitQueue.prototype.push = function (item) {
+        this.queue.push(item);
         this._flush();
         return this.length;
     };
@@ -111,33 +79,27 @@ var WaitQueue = /** @class */ (function () {
         }
         return new Promise(function (resolve, reject) {
             var self = _this;
-            if (_this.queue.length > 0) {
+            if (self.queue.length > 0) {
                 return resolve(fn());
             }
             else {
-                var timedOut_1 = false;
-                var timerId_1 = (timeout && timeout > 0) ?
-                    setTimeout(function () {
-                        self.numListenersDelta++;
-                        timedOut_1 = true;
-                        timerId_1 = undefined;
-                        reject(new Error("Timed Out"));
-                    }, timeout) : undefined;
-                _this.listeners.push(function (err) {
+                var timerId_1;
+                var listener_1 = self.listeners.push(function (err) {
                     if (timerId_1) {
                         clearTimeout(timerId_1);
                         timerId_1 = undefined;
-                    }
-                    if (timedOut_1) {
-                        self.numListenersDelta--;
-                        // already rejected, doesn't matter if err via clearListeners
-                        return;
                     }
                     if (err) {
                         return reject(err);
                     }
                     return resolve(fn());
                 });
+                timerId_1 = (timeout && timeout > 0) ?
+                    setTimeout(function () {
+                        timerId_1 = undefined;
+                        self.listeners.remove(listener_1);
+                        reject(new Error("Timed Out"));
+                    }, timeout) : undefined;
             }
         });
     };
@@ -157,19 +119,7 @@ var WaitQueue = /** @class */ (function () {
 }());
 if (typeof Symbol === 'function' && typeof Symbol.iterator === 'symbol') {
     WaitQueue.prototype[Symbol.iterator] = function () {
-        var node = this.queue._front;
-        return {
-            next: function () {
-                if (node === null) {
-                    return { value: null, done: true };
-                }
-                else {
-                    var r = { value: node.item, done: false };
-                    node = node._next;
-                    return r;
-                }
-            },
-        };
+        return this.queue[Symbol.iterator]();
     };
 }
 module.exports = WaitQueue;
