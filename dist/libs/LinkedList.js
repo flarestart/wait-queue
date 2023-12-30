@@ -1,115 +1,103 @@
 "use strict";
+/*
+ * Javascript WaitQueue Object in ES5
+ * https://github.com/flarestart/wait-queue-es5
+ */
 Object.defineProperty(exports, "__esModule", { value: true });
 function createNode(item) {
-    return {
+    var tmp = {
         _next: null,
         _prev: null,
         item: item
     };
+    tmp._next = tmp;
+    tmp._prev = tmp;
+    return tmp;
 }
 var LinkedList = /** @class */ (function () {
+    /* same as empty */
     function LinkedList() {
         this._length = 0;
-        this._front = null;
-        this._end = null;
+        this._head = createNode();
+        this._length = 0;
     }
+    /* same as constructor */
+    LinkedList.prototype.empty = function () {
+        this._head = createNode();
+        this._length = 0;
+    };
     Object.defineProperty(LinkedList.prototype, "length", {
         get: function () {
             return this._length;
         },
-        enumerable: true,
+        enumerable: false,
         configurable: true
     });
-    LinkedList.prototype.empty = function () {
-        this._length = 0;
-        this._front = null;
-        this._end = null;
+    LinkedList.prototype.push = function (item) {
+        var node = createNode(item);
+        node._next = this._head;
+        node._prev = this._head._prev;
+        this._head._prev._next = node;
+        this._head._prev = node;
+        if (this._head._next == this._head) {
+            this._head._next = node;
+        }
+        this._length++;
+        return node;
     };
-    LinkedList.prototype.push = function () {
-        var _this = this;
-        var items = [];
-        for (var _i = 0; _i < arguments.length; _i++) {
-            items[_i] = arguments[_i];
+    LinkedList.prototype.unshift = function (item) {
+        var node = createNode(item);
+        node._prev = this._head;
+        node._next = this._head._next;
+        this._head._next._prev = node;
+        this._head._next = node;
+        if (this._head._prev == this._head) {
+            this._head._prev = node;
         }
-        items.forEach(function (item) {
-            var node = createNode(item);
-            if (_this._front && _this._end) {
-                _this._end._next = node;
-                node._prev = _this._end;
-                _this._end = node;
-            }
-            else {
-                _this._front = node;
-                _this._end = node;
-            }
-            _this._length++;
-        });
-        return this._length;
-    };
-    LinkedList.prototype.shift = function () {
-        var item = this._front;
-        if (item === null) {
-            return null;
-        }
-        if (item._next != null) {
-            this._front = item._next;
-            this._front._prev = null;
-        }
-        else {
-            this._front = null;
-            this._end = null;
-        }
-        item._next = null;
-        this._length--;
-        return item.item;
-    };
-    LinkedList.prototype.unshift = function () {
-        var _this = this;
-        var items = [];
-        for (var _i = 0; _i < arguments.length; _i++) {
-            items[_i] = arguments[_i];
-        }
-        items.forEach(function (item) {
-            var node = createNode(item);
-            if (_this._front === null) {
-                _this._front = node;
-                _this._end = node;
-            }
-            else {
-                node._next = _this._front;
-                _this._front._prev = node;
-                _this._front = node;
-            }
-            _this._length++;
-        });
-        return this._length;
+        this._length++;
+        return node;
     };
     LinkedList.prototype.pop = function () {
-        var item = this._end;
-        if (item === null) {
-            return null;
+        if (this._head._prev == this._head) {
+            throw new Error("empty list");
         }
-        if (item._prev != null) {
-            this._end = item._prev;
-            this._end._next = null;
-        }
-        else {
-            this._front = null;
-            this._end = null;
-        }
+        var item = this._head._prev;
+        this._head._prev = item._prev;
+        item._prev._next = this._head;
+        item._removed = true;
         this._length--;
-        item._prev = null;
         return item.item;
+    };
+    LinkedList.prototype.shift = function () {
+        if (this._head._next == this._head) {
+            throw new Error("empty list");
+        }
+        var item = this._head._next;
+        this._head._next = item._next;
+        item._next._prev = this._head;
+        item._removed = true;
+        this._length--;
+        return item.item;
+    };
+    LinkedList.prototype.remove = function (node) {
+        if (node._removed) {
+            return;
+        }
+        node._prev._next = node._next;
+        node._next._prev = node._prev;
+        node._removed = true;
+        this._length--;
     };
     return LinkedList;
 }());
 /* istanbul ignore next */
 if (typeof Symbol === 'function' && typeof Symbol.iterator === 'symbol') {
     LinkedList.prototype[Symbol.iterator] = function () {
-        var node = this._front;
+        var head = this._head;
+        var node = this._head._next;
         return {
             next: function () {
-                if (node === null) {
+                if (node === head) {
                     return { value: null, done: true };
                 }
                 var r = { value: node.item, done: false };

@@ -2,106 +2,133 @@
  * Javascript WaitQueue Object in ES5
  * https://github.com/flarestart/wait-queue-es5
  */
-interface Node {
-  _next: Node | null;
-  _prev: Node | null;
-  item: any;
+
+interface Node<T> {
+  _next: Node<T>;
+  _prev: Node<T>;
+  _removed?: boolean;
+  item: T
 }
 
-function createNode(item: any): Node {
-  return {
+function createNode<T>(item?: T): Node<T> {
+  const tmp : {
+  _next: Node<T> | null;
+  _prev: Node<T> | null;
+  item?: T
+} = {
     _next: null,
     _prev: null,
-    item
-  };
+    item: item
+  }
+
+  tmp._next = tmp as Node<T>;
+  tmp._prev = tmp as Node<T>;
+
+  return tmp as Node<T>;
 }
 
-class LinkedList {
-  [Symbol.iterator]: () => { next: () => { value: any; done: boolean } };
+class LinkedList<T> {
+  [Symbol.iterator]: () => { next: () => { value: T; done: boolean } };
 
   _length = 0;
-  _front: Node | null = null;
-  _end: Node | null = null;
+  _head: Node<T>;
+
+  /* same as empty */
+  constructor() {
+    this._head = createNode<T>();
+    this._length = 0;
+  }
+
+  /* same as constructor */
+  empty() {
+    this._head = createNode<T>();
+    this._length = 0;
+  }
 
   get length() {
     return this._length;
   }
-  empty() {
-    this._length = 0;
-    this._front = null;
-    this._end = null;
-  }
-  push(...items: any[]) {
-    items.forEach(item => {
-      const node = createNode(item);
-      if (this._front && this._end) {
-        this._end._next = node;
-        node._prev = this._end;
-        this._end = node;
-      } else {
-        this._front = node;
-        this._end = node;
-      }
-      this._length++;
-    });
-    return this._length;
-  }
-  shift() {
-    const item = this._front;
-    if (item === null) {
-      return null;
+
+  push(item: T) {
+    const node = createNode(item);
+
+    node._next = this._head;
+    node._prev = this._head._prev;
+    this._head._prev._next = node;
+    this._head._prev = node;
+    if (this._head._next == this._head) {
+      this._head._next = node;
     }
-    if (item._next != null) {
-      this._front = item._next;
-      this._front._prev = null;
-    } else {
-      this._front = null;
-      this._end = null;
+    this._length++;
+
+    return node;
+  }
+
+  unshift(item: T) {
+    const node = createNode(item);
+
+    node._prev = this._head;
+    node._next = this._head._next;
+    this._head._next._prev = node;
+    this._head._next = node;
+    if (this._head._prev == this._head) {
+      this._head._prev = node;
     }
-    item._next = null;
-    this._length--;
-    return item.item;
+    this._length++;
+
+    return node;
   }
-  unshift(...items: any[]) {
-    items.forEach(item => {
-      const node = createNode(item);
-      if (this._front === null) {
-        this._front = node;
-        this._end = node;
-      } else {
-        node._next = this._front;
-        this._front._prev = node;
-        this._front = node;
-      }
-      this._length++;
-    });
-    return this._length;
-  }
+
   pop() {
-    const item = this._end;
-    if (item === null) {
-      return null;
+    if (this._head._prev == this._head) {
+      throw new Error("empty list")
     }
-    if (item._prev != null) {
-      this._end = item._prev;
-      this._end._next = null;
-    } else {
-      this._front = null;
-      this._end = null;
-    }
+
+    const item = this._head._prev;
+    this._head._prev = item._prev;
+    item._prev._next = this._head
+
+    item._removed = true;
     this._length--;
-    item._prev = null;
-    return item.item;
+
+    return item.item
+  }
+
+  shift() {
+    if (this._head._next == this._head) {
+      throw new Error("empty list")
+    }
+
+    const item = this._head._next;
+    this._head._next = item._next
+    item._next._prev = this._head;
+
+    item._removed = true;
+    this._length--;
+
+    return item.item
+  }
+
+  remove(node: Node<T>) {
+    if (node._removed) {
+      return;
+    }
+    node._prev._next = node._next;
+    node._next._prev = node._prev;
+
+    node._removed = true;
+    this._length--;
   }
 }
 
 /* istanbul ignore next */
 if (typeof Symbol === 'function' && typeof Symbol.iterator === 'symbol') {
   LinkedList.prototype[Symbol.iterator] = function() {
-    let node = this._front;
+    const head = this._head;
+    let node = this._head._next;
     return {
       next() {
-        if (node === null) {
+        if (node === head) {
           return { value: null, done: true };
         }
         const r = { value: node.item, done: false };

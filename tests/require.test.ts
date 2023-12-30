@@ -5,6 +5,7 @@ describe('require WaitQueue', function () {
   it('expect WaitQueue to be a function', function () {
     expect(typeof WaitQueue).toEqual('function');
   });
+  
   it('new WaitQueue', function () {
     expect(new WaitQueue()).toBeInstanceOf(WaitQueue);
   });

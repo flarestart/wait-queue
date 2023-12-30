@@ -6,16 +6,18 @@ declare class WaitQueue<T> {
             done: boolean;
         };
     };
-    queue: LinkedList;
-    listeners: LinkedList;
+    queue: LinkedList<T>;
+    listeners: LinkedList<(err?: Error | undefined) => unknown>;
     get length(): number;
+    numWaiters(): number;
     empty(): void;
     clear(): void;
     clearListeners(): void;
-    unshift(...items: T[]): number;
-    push(...items: T[]): number;
-    shift(): Promise<T>;
-    pop(): Promise<T>;
+    unshift(item: T): number;
+    push(item: T): number;
+    private _remove;
+    shift(timeout?: number): Promise<T>;
+    pop(timeout?: number): Promise<T>;
     private _flush;
 }
 export = WaitQueue;
