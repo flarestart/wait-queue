@@ -4,14 +4,6 @@
  */
 import LinkedList from './libs/LinkedList';
 
-const nextLoop = (() => {
-  if (typeof setImmediate === 'function') {
-    return setImmediate;
-  }
-  /* istanbul ignore next */
-  return (fn: (...args: any[]) => void) => setTimeout(fn, 0);
-})();
-
 class WaitQueue<T> {
   [Symbol.iterator]: () => { next: () => { value: any; done: boolean } };
 
@@ -21,6 +13,12 @@ class WaitQueue<T> {
   get length(): number {
     return this.queue.length;
   }
+  
+  numListeners(): number {
+    return this.listeners.length - this.numListenersDelta;
+  }
+  numListenersDelta = 0;
+
   empty(): void {
     this.queue = new LinkedList();
   }
@@ -32,6 +30,7 @@ class WaitQueue<T> {
       listener(new Error('Clear Listeners'));
     }
     this.listeners = new LinkedList();
+    this.numListenersDelta = 0;
   }
   unshift(...items: T[]): number {
     this.queue.unshift(...items);
@@ -45,39 +44,47 @@ class WaitQueue<T> {
   }
 
   private _remove(type: "SHIFT" | "POP", timeout?: number): Promise<T> {
+    let fn: () => any;
+    switch (type) {
+      case 'SHIFT':
+        fn = this.queue.shift.bind(this.queue);
+        break;
+      case 'POP':
+        fn = this.queue.pop.bind(this.queue);
+        break;
+    }
+
     return new Promise((resolve, reject) => {
+      const self = this;
       if (this.queue.length > 0) {
-        switch (type) {
-          case 'SHIFT':
-            return resolve(this.queue.shift());
-          case 'POP':
-            return resolve(this.queue.pop());
-        }
+        return resolve(fn());
       } else {
         let timedOut = false;
-
-        if (timeout && timeout > 0) {
+        let timerId = (timeout && timeout > 0) ?
           setTimeout(() => {
+            self.numListenersDelta++;
             timedOut = true;
-            reject("timed out");
-          }, timeout);
-        }
+            timerId = undefined;
+            reject(new Error("Timed Out"));
+          }, timeout) : undefined;
 
         this.listeners.push((err: Error) => {
+          if (timerId) {
+            clearTimeout(timerId);
+            timerId = undefined;
+          }
+
+          if (timedOut) {
+            self.numListenersDelta--;
+            // already rejected, doesn't matter if err via clearListeners
+            return;
+          }
+
           if (err) {
             return reject(err);
           }
 
-          if (timedOut) {
-            return this._flush();
-          }
-
-          switch (type) {
-            case 'SHIFT':
-              return resolve(this.queue.shift());
-            case 'POP':
-              return resolve(this.queue.pop());
-          }
+          return resolve(fn());
         });
       }
     });
@@ -91,11 +98,9 @@ class WaitQueue<T> {
   }
 
   private _flush(): void {
-    if (this.queue.length > 0 && this.listeners.length > 0) {
+    while (this.queue.length > 0 && this.listeners.length > 0) {
       const listener = this.listeners.shift();
       listener.call(this);
-      // delay next loop
-      nextLoop(this._flush.bind(this));
     }
   }
 }

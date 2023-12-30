@@ -34,33 +34,17 @@ class LinkedList {
   push(...items: any[]) {
     items.forEach(item => {
       const node = createNode(item);
-      if (this._front && this._end) {
-        this._end._next = node;
-        node._prev = this._end;
+      if (this._end === null) {
+        this._front = node;
         this._end = node;
       } else {
-        this._front = node;
+        this._end._next = node;
+        node._prev = this._end;
         this._end = node;
       }
       this._length++;
     });
     return this._length;
-  }
-  shift() {
-    const item = this._front;
-    if (item === null) {
-      return null;
-    }
-    if (item._next != null) {
-      this._front = item._next;
-      this._front._prev = null;
-    } else {
-      this._front = null;
-      this._end = null;
-    }
-    item._next = null;
-    this._length--;
-    return item.item;
   }
   unshift(...items: any[]) {
     items.forEach(item => {
@@ -93,6 +77,23 @@ class LinkedList {
     item._prev = null;
     return item.item;
   }
+  shift() {
+    const item = this._front;
+    if (item === null) {
+      return null;
+    }
+    if (item._next != null) {
+      this._front = item._next;
+      this._front._prev = null;
+    } else {
+      this._front = null;
+      this._end = null;
+    }
+    item._next = null;
+    this._length--;
+    return item.item;
+  }
+
 }
 
 /* istanbul ignore next */

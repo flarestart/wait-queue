@@ -33,35 +33,18 @@ var LinkedList = /** @class */ (function () {
         }
         items.forEach(function (item) {
             var node = createNode(item);
-            if (_this._front && _this._end) {
-                _this._end._next = node;
-                node._prev = _this._end;
+            if (_this._end === null) {
+                _this._front = node;
                 _this._end = node;
             }
             else {
-                _this._front = node;
+                _this._end._next = node;
+                node._prev = _this._end;
                 _this._end = node;
             }
             _this._length++;
         });
         return this._length;
-    };
-    LinkedList.prototype.shift = function () {
-        var item = this._front;
-        if (item === null) {
-            return null;
-        }
-        if (item._next != null) {
-            this._front = item._next;
-            this._front._prev = null;
-        }
-        else {
-            this._front = null;
-            this._end = null;
-        }
-        item._next = null;
-        this._length--;
-        return item.item;
     };
     LinkedList.prototype.unshift = function () {
         var _this = this;
@@ -99,6 +82,23 @@ var LinkedList = /** @class */ (function () {
         }
         this._length--;
         item._prev = null;
+        return item.item;
+    };
+    LinkedList.prototype.shift = function () {
+        var item = this._front;
+        if (item === null) {
+            return null;
+        }
+        if (item._next != null) {
+            this._front = item._next;
+            this._front._prev = null;
+        }
+        else {
+            this._front = null;
+            this._end = null;
+        }
+        item._next = null;
+        this._length--;
         return item.item;
     };
     return LinkedList;

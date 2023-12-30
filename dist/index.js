@@ -38,17 +38,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
  * https://github.com/flarestart/wait-queue
  */
 var LinkedList_1 = __importDefault(require("./libs/LinkedList"));
-var nextLoop = (function () {
-    if (typeof setImmediate === 'function') {
-        return setImmediate;
-    }
-    /* istanbul ignore next */
-    return function (fn) { return setTimeout(fn, 0); };
-})();
 var WaitQueue = /** @class */ (function () {
     function WaitQueue() {
         this.queue = new LinkedList_1.default();
         this.listeners = new LinkedList_1.default();
+        this.numListenersDelta = 0;
     }
     Object.defineProperty(WaitQueue.prototype, "length", {
         get: function () {
@@ -57,6 +51,9 @@ var WaitQueue = /** @class */ (function () {
         enumerable: false,
         configurable: true
     });
+    WaitQueue.prototype.numListeners = function () {
+        return this.listeners.length - this.numListenersDelta;
+    };
     WaitQueue.prototype.empty = function () {
         this.queue = new LinkedList_1.default();
     };
@@ -79,6 +76,7 @@ var WaitQueue = /** @class */ (function () {
             finally { if (e_1) throw e_1.error; }
         }
         this.listeners = new LinkedList_1.default();
+        this.numListenersDelta = 0;
     };
     WaitQueue.prototype.unshift = function () {
         var _a;
@@ -102,36 +100,43 @@ var WaitQueue = /** @class */ (function () {
     };
     WaitQueue.prototype._remove = function (type, timeout) {
         var _this = this;
+        var fn;
+        switch (type) {
+            case 'SHIFT':
+                fn = this.queue.shift.bind(this.queue);
+                break;
+            case 'POP':
+                fn = this.queue.pop.bind(this.queue);
+                break;
+        }
         return new Promise(function (resolve, reject) {
+            var self = _this;
             if (_this.queue.length > 0) {
-                switch (type) {
-                    case 'SHIFT':
-                        return resolve(_this.queue.shift());
-                    case 'POP':
-                        return resolve(_this.queue.pop());
-                }
+                return resolve(fn());
             }
             else {
                 var timedOut_1 = false;
-                if (timeout && timeout > 0) {
+                var timerId_1 = (timeout && timeout > 0) ?
                     setTimeout(function () {
+                        self.numListenersDelta++;
                         timedOut_1 = true;
-                        reject("timed out");
-                    }, timeout);
-                }
+                        timerId_1 = undefined;
+                        reject(new Error("Timed Out"));
+                    }, timeout) : undefined;
                 _this.listeners.push(function (err) {
+                    if (timerId_1) {
+                        clearTimeout(timerId_1);
+                        timerId_1 = undefined;
+                    }
+                    if (timedOut_1) {
+                        self.numListenersDelta--;
+                        // already rejected, doesn't matter if err via clearListeners
+                        return;
+                    }
                     if (err) {
                         return reject(err);
                     }
-                    if (timedOut_1) {
-                        return _this._flush();
-                    }
-                    switch (type) {
-                        case 'SHIFT':
-                            return resolve(_this.queue.shift());
-                        case 'POP':
-                            return resolve(_this.queue.pop());
-                    }
+                    return resolve(fn());
                 });
             }
         });
@@ -143,11 +148,9 @@ var WaitQueue = /** @class */ (function () {
         return this._remove('POP', timeout);
     };
     WaitQueue.prototype._flush = function () {
-        if (this.queue.length > 0 && this.listeners.length > 0) {
+        while (this.queue.length > 0 && this.listeners.length > 0) {
             var listener = this.listeners.shift();
             listener.call(this);
-            // delay next loop
-            nextLoop(this._flush.bind(this));
         }
     };
     return WaitQueue;

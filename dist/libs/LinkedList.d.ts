@@ -16,8 +16,8 @@ declare class LinkedList {
     get length(): number;
     empty(): void;
     push(...items: any[]): number;
-    shift(): any;
     unshift(...items: any[]): number;
     pop(): any;
+    shift(): any;
 }
 export default LinkedList;

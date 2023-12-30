@@ -78,18 +78,6 @@ describe('Methods of WaitQueue', function() {
     assert.ok(wq.pop() instanceof Promise);
   });
 
-  it('pop(timeout) should error out', async function() {
-    assert.rejects(wq.pop(1))
-  });
-
-  it('timed out pop should pop next one', async function() {
-    const p1 = wq.pop(1);
-    const p2 = wq.pop();
-    setTimeout(() => wq.push(1), 100);
-    assert.rejects(p1);
-    assert.strictEqual(await p2, 1);
-  })
-
   it('shift() should wait while empty', async function() {
     const obj = { name: 'test' };
     setTimeout(() => {
@@ -111,6 +99,52 @@ describe('Methods of WaitQueue', function() {
     assert.equal(ret, obj);
     assert.equal(obj.name, 'test');
   });
+
+  it('multiple shifts are in correct order', async function() {
+    wq.push(0, 1, 2, 3, 4);
+    for(let i=0; i < 5; i++) {
+      assert.strictEqual(await wq.shift(), i)
+    }
+  })
+
+  it('multiple pops are in correct order', async function() {
+    wq.push(0, 1, 2, 3, 4);
+    for(let i=4; i >= 0; i--) {
+      assert.strictEqual(await wq.pop(), i)
+    }
+  })
+
+  it('pop(timeout) should error out', async function() {
+    assert.rejects(wq.pop(1))
+  });
+
+  it('timed out listener, should try next listener', async function() {
+    const p1 = wq.pop(1);
+    const p2 = wq.pop();
+    setTimeout(() => wq.push(1), 10);
+    try {
+      await p1;
+      assert.strictEqual(true, false);
+    } catch (err) {
+      assert.deepStrictEqual(err, new Error("Timed Out"))
+    }
+    assert.strictEqual(await p2, 1);
+  })
+
+  it('count number of listeners', async function() {
+    const p1 = wq.pop(1);
+    const p2 = wq.pop();
+    wq.pop().catch(() => {}); // this will be cleared, and hence failed;
+
+    assert.strictEqual(wq.numListeners(), 3);
+    setTimeout(() => assert.strictEqual(wq.numListeners(), 2), 10);
+    setTimeout(() => wq.push(1), 20);
+    assert.rejects(p1);
+    assert.strictEqual(await p2, 1);
+    assert.strictEqual(wq.numListeners(), 1)
+    wq.clearListeners();
+    assert.strictEqual(wq.numListeners(), 0);
+  })
 
   it('Iterator for(... of ...)', function() {
     for (let n = 0; n < 5; n++) {

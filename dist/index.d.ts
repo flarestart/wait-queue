@@ -9,6 +9,8 @@ declare class WaitQueue<T> {
     queue: LinkedList;
     listeners: LinkedList;
     get length(): number;
+    numListeners(): number;
+    numListenersDelta: number;
     empty(): void;
     clear(): void;
     clearListeners(): void;
